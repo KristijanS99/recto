@@ -30,38 +30,53 @@
 ## See it in action
 
 ```
-You:     I had mass today and reflected on something the priest said about
-         patience. It really stuck with me — how patience isn't passive,
-         it's an active form of trust.
+────────────────────────────────────────────────────────────────
+  Recto · Diarium                              Anno MMXXVI, Martius
+────────────────────────────────────────────────────────────────
 
-Claude:  ✓ Saved journal entry.
-         ↳ Auto-tagged: #reflection #faith #patience
-         ↳ Mood detected: contemplative
+Scriptor:   I had mass today and reflected on something the
+            priest said about patience. It really stuck with
+            me — how patience isn't passive, it's an active
+            form of trust.
 
-         Would you like to explore what you've written about patience before?
+Librarius:  ✓ Inscriptum in codex.
+            ↳ Tagged: #reflection #faith #patience
+            ↳ Mood: contemplative
 
-You:     Yeah, search my journal for patience.
+            Shall I search the codex for earlier writings
+            on patience?
 
-Claude:  Found 3 entries mentioning patience:
+Scriptor:   Yeah, search my journal for patience.
 
-         1. Today — "patience isn't passive, it's an active form of trust"
-         2. Feb 18 — "struggling with patience at work, deadlines piling up"
-         3. Jan 5 — "new year resolution: be more patient with myself"
+Librarius:  Found III entries in the codex:
 
-         There's an interesting thread here — your understanding of patience
-         has shifted from something you struggle with to something you see
-         as a strength. Want me to write a reflection on that?
+            I.   Martius — "patience isn't passive, it's
+                 an active form of trust"
+            II.  Februarius — "struggling with patience at
+                 work, deadlines piling up"
+            III. Ianuarius — "new year resolution: be more
+                 patient with myself"
 
-You:     Yes, reflect on my relationship with patience.
+            An interesting thread emerges — your understanding
+            of patience has shifted from burden to strength.
+            Shall I compose a reflection?
 
-Claude:  Here's what I see across your entries...
+Scriptor:   Yes, reflect on my relationship with patience.
 
-         In January, patience felt like a burden — something you needed to
-         "get better at." By February, you were noticing where it was hard.
-         Now in March, you're finding wisdom in it.
+Librarius:  What the codex reveals...
 
-         You're not just becoming more patient. You're redefining what
-         patience means to you — from endurance to trust.
+            In Ianuarius, patience felt like a burden —
+            something you needed to "get better at."
+            By Februarius, you were noticing where it
+            was hard. Now in Martius, you find wisdom in it.
+
+            You are not merely becoming more patient.
+            You are redefining what patience means to you —
+            from endurance to trust.
+
+────────────────────────────────────────────────────────────────
+  finis paginae
+────────────────────────────────────────────────────────────────
 ```
 
 ---
