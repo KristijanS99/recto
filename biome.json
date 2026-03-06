@@ -31,6 +31,18 @@
       "trailingCommas": "none"
     }
   },
+  "overrides": [
+    {
+      "includes": ["**/__tests__/**", "**/*.test.*", "**/*.spec.*"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": [
       "**",
