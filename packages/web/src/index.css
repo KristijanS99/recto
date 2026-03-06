@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-sand-50: #faf8f5;
+  --color-sand-100: #f0ece5;
+  --color-sand-200: #e0d9cc;
+  --color-sand-300: #c9bfad;
+  --color-sand-400: #b3a48e;
+  --color-sand-500: #9d8a70;
+  --color-sand-600: #7d6e5a;
+  --color-sand-700: #5e5343;
+  --color-sand-800: #3f382d;
+  --color-sand-900: #1f1c16;
+}
+
+body {
+  @apply bg-sand-50 text-sand-900 dark:bg-sand-900 dark:text-sand-50;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
