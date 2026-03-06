@@ -141,6 +141,9 @@ describe('enrichEntry', () => {
         people: ['Bob'],
       };
     },
+    async generate(): Promise<string> {
+      return '';
+    },
   };
 
   const mockEmbedding: EmbeddingProvider = {
@@ -227,6 +230,9 @@ describe('enrichEntry', () => {
       async enrich(): Promise<EnrichmentResult> {
         throw new Error('LLM API down');
       },
+      async generate(): Promise<string> {
+        throw new Error('LLM API down');
+      },
     };
 
     const [entry] = await db
@@ -269,6 +275,9 @@ describe('enrichment via API', () => {
         people: [],
       };
     },
+    async generate(): Promise<string> {
+      return '';
+    },
   };
 
   it('triggers enrichment on entry creation', async () => {
@@ -300,6 +309,9 @@ describe('enrichment via API', () => {
       async enrich(): Promise<EnrichmentResult> {
         callCount++;
         return { title: `Title v${callCount}`, tags: [], mood: null, people: [] };
+      },
+      async generate(): Promise<string> {
+        return '';
       },
     };
 

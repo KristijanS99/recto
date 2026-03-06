@@ -9,6 +9,7 @@ export interface EnrichmentResult {
 
 export interface LLMProvider {
   enrich(content: string): Promise<EnrichmentResult>;
+  generate(prompt: string): Promise<string>;
 }
 
 const ENRICHMENT_PROMPT = `Given this journal entry, extract the following. Return ONLY valid JSON, no other text.
@@ -47,7 +48,7 @@ function parseEnrichmentResponse(text: string): EnrichmentResult {
 export class AnthropicLLM implements LLMProvider {
   constructor(private apiKey: string) {}
 
-  async enrich(content: string): Promise<EnrichmentResult> {
+  private async call(prompt: string, maxTokens = 512): Promise<string> {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -57,13 +58,8 @@ export class AnthropicLLM implements LLMProvider {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        messages: [
-          {
-            role: 'user',
-            content: `${ENRICHMENT_PROMPT}\n\nJournal entry:\n${content}`,
-          },
-        ],
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }],
       }),
     });
 
@@ -77,8 +73,16 @@ export class AnthropicLLM implements LLMProvider {
     };
     const textBlock = json.content.find((b) => b.type === 'text');
     if (!textBlock) throw new Error('No text block in Anthropic response');
+    return textBlock.text;
+  }
 
-    return parseEnrichmentResponse(textBlock.text);
+  async enrich(content: string): Promise<EnrichmentResult> {
+    const text = await this.call(`${ENRICHMENT_PROMPT}\n\nJournal entry:\n${content}`);
+    return parseEnrichmentResponse(text);
+  }
+
+  async generate(prompt: string): Promise<string> {
+    return this.call(prompt, 1024);
   }
 }
 
@@ -88,7 +92,16 @@ export class AnthropicLLM implements LLMProvider {
 export class OpenAILLM implements LLMProvider {
   constructor(private apiKey: string) {}
 
-  async enrich(content: string): Promise<EnrichmentResult> {
+  private async call(
+    userContent: string,
+    systemContent?: string,
+    maxTokens = 512,
+    jsonMode = false,
+  ): Promise<string> {
+    const messages: Array<{ role: string; content: string }> = [];
+    if (systemContent) messages.push({ role: 'system', content: systemContent });
+    messages.push({ role: 'user', content: userContent });
+
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -97,12 +110,9 @@ export class OpenAILLM implements LLMProvider {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        max_tokens: 512,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: ENRICHMENT_PROMPT },
-          { role: 'user', content },
-        ],
+        max_tokens: maxTokens,
+        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+        messages,
       }),
     });
 
@@ -116,8 +126,16 @@ export class OpenAILLM implements LLMProvider {
     };
     const message = json.choices[0]?.message?.content;
     if (!message) throw new Error('No content in OpenAI response');
+    return message;
+  }
 
-    return parseEnrichmentResponse(message);
+  async enrich(content: string): Promise<EnrichmentResult> {
+    const text = await this.call(content, ENRICHMENT_PROMPT, 512, true);
+    return parseEnrichmentResponse(text);
+  }
+
+  async generate(prompt: string): Promise<string> {
+    return this.call(prompt, undefined, 1024);
   }
 }
 
@@ -127,6 +145,10 @@ export class OpenAILLM implements LLMProvider {
 export class NullLLM implements LLMProvider {
   async enrich(): Promise<EnrichmentResult> {
     return { title: '', tags: [], mood: null, people: [] };
+  }
+
+  async generate(): Promise<string> {
+    return '';
   }
 }
 

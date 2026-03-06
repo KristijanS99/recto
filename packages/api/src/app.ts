@@ -7,6 +7,7 @@ import { createLogger } from './lib/logger.js';
 import { authMiddleware } from './middleware/auth.js';
 import { entriesRoutes } from './routes/entries.js';
 import { mediaRoutes } from './routes/media.js';
+import { reflectRoutes } from './routes/reflect.js';
 import { searchRoutes } from './routes/search.js';
 import { systemRoutes } from './routes/system.js';
 import { entryTagsRoutes, tagsRoutes } from './routes/tags.js';
@@ -80,6 +81,9 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
 
   // Search routes
   app.route('/search', searchRoutes(db, embeddingProvider));
+
+  // Reflect routes
+  app.route('/reflect', reflectRoutes(db, effectiveLLM));
 
   // Entry sub-routes (tags, media)
   app.route('/entries', entryTagsRoutes(db));
