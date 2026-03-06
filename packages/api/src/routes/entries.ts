@@ -3,6 +3,7 @@ import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
+import type { EnrichCallback } from '../services/enrichment.js';
 import {
   createEntrySchema,
   decodeCursor,
@@ -11,7 +12,7 @@ import {
   updateEntrySchema,
 } from '../types.js';
 
-export function entriesRoutes(db: Database) {
+export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   const app = new Hono();
 
   // POST /entries — Create entry
@@ -28,6 +29,9 @@ export function entriesRoutes(db: Database) {
         metadata: body.metadata ?? {},
       })
       .returning();
+
+    // Fire-and-forget enrichment
+    if (onEnrich && entry) onEnrich(entry.id);
 
     return c.json(entry, 201);
   });
@@ -109,6 +113,9 @@ export function entriesRoutes(db: Database) {
     if (!updated) {
       return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
     }
+
+    // Re-enrich if content changed
+    if (body.content && onEnrich) onEnrich(updated.id);
 
     return c.json(updated);
   });

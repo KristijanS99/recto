@@ -3,19 +3,27 @@ import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
 import type { Config } from './config.js';
 import type { Database } from './db/connection.js';
+import { createLogger } from './lib/logger.js';
 import { authMiddleware } from './middleware/auth.js';
 import { entriesRoutes } from './routes/entries.js';
 import { mediaRoutes } from './routes/media.js';
 import { searchRoutes } from './routes/search.js';
 import { systemRoutes } from './routes/system.js';
 import { entryTagsRoutes, tagsRoutes } from './routes/tags.js';
-import type { EmbeddingProvider } from './services/embedding.js';
+import { type EmbeddingProvider, NullEmbedding } from './services/embedding.js';
+import { enrichEntry } from './services/enrichment.js';
+import { type LLMProvider, NullLLM } from './services/llm.js';
 
-export function createApp(
-  db: Database,
-  config: Config,
-  embeddingProvider?: EmbeddingProvider | null,
-) {
+const logger = createLogger('app');
+
+export interface AppDeps {
+  embeddingProvider?: EmbeddingProvider | null;
+  llmProvider?: LLMProvider | null;
+}
+
+export function createApp(db: Database, config: Config, deps?: AppDeps) {
+  const embeddingProvider = deps?.embeddingProvider ?? null;
+  const llmProvider = deps?.llmProvider ?? null;
   const app = new Hono();
 
   // Global error handler
@@ -51,14 +59,27 @@ export function createApp(
   // Auth middleware for all other routes
   app.use('/*', authMiddleware(config.RECTO_API_KEY));
 
+  // Build enrichment callback
+  const effectiveLLM = llmProvider ?? new NullLLM();
+  const effectiveEmbedding = embeddingProvider ?? new NullEmbedding();
+  const hasEnrichment = !(effectiveLLM instanceof NullLLM) || effectiveEmbedding.dimensions > 0;
+
+  const onEnrich = hasEnrichment
+    ? (entryId: string) => {
+        enrichEntry(db, effectiveLLM, effectiveEmbedding, entryId).catch((err) =>
+          logger.error('Enrichment pipeline failed', { entryId, error: String(err) }),
+        );
+      }
+    : undefined;
+
   // Entry routes
-  app.route('/entries', entriesRoutes(db));
+  app.route('/entries', entriesRoutes(db, onEnrich));
 
   // Tag routes
   app.route('/tags', tagsRoutes(db));
 
   // Search routes
-  app.route('/search', searchRoutes(db, embeddingProvider ?? null));
+  app.route('/search', searchRoutes(db, embeddingProvider));
 
   // Entry sub-routes (tags, media)
   app.route('/entries', entryTagsRoutes(db));

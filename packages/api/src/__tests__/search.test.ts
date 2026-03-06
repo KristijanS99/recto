@@ -252,7 +252,7 @@ describe('semantic search with mock embedding', () => {
   };
 
   beforeAll(() => {
-    semanticApp = createApp(db, testConfig, mockEmbedding);
+    semanticApp = createApp(db, testConfig, { embeddingProvider: mockEmbedding });
   });
 
   it('performs semantic search when provider is available', async () => {

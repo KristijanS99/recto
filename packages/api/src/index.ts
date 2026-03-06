@@ -4,6 +4,7 @@ import { loadConfig } from './config.js';
 import { createDb } from './db/connection.js';
 import { runMigrations } from './db/migrate.js';
 import { createEmbeddingProvider } from './services/embedding.js';
+import { createLLMProvider } from './services/llm.js';
 
 async function main() {
   const config = loadConfig();
@@ -12,7 +13,8 @@ async function main() {
   await runMigrations(db);
 
   const embeddingProvider = createEmbeddingProvider(config);
-  const app = createApp(db, config, embeddingProvider);
+  const llmProvider = createLLMProvider(config);
+  const app = createApp(db, config, { embeddingProvider, llmProvider });
 
   serve({ fetch: app.fetch, port: config.API_PORT }, () => {
     console.log(`@recto/api listening on port ${config.API_PORT}`);
