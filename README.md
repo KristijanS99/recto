@@ -27,6 +27,45 @@
 
 ---
 
+## See it in action
+
+```
+You:     I had mass today and reflected on something the priest said about
+         patience. It really stuck with me — how patience isn't passive,
+         it's an active form of trust.
+
+Claude:  ✓ Saved journal entry.
+         ↳ Auto-tagged: #reflection #faith #patience
+         ↳ Mood detected: contemplative
+
+         Would you like to explore what you've written about patience before?
+
+You:     Yeah, search my journal for patience.
+
+Claude:  Found 3 entries mentioning patience:
+
+         1. Today — "patience isn't passive, it's an active form of trust"
+         2. Feb 18 — "struggling with patience at work, deadlines piling up"
+         3. Jan 5 — "new year resolution: be more patient with myself"
+
+         There's an interesting thread here — your understanding of patience
+         has shifted from something you struggle with to something you see
+         as a strength. Want me to write a reflection on that?
+
+You:     Yes, reflect on my relationship with patience.
+
+Claude:  Here's what I see across your entries...
+
+         In January, patience felt like a burden — something you needed to
+         "get better at." By February, you were noticing where it was hard.
+         Now in March, you're finding wisdom in it.
+
+         You're not just becoming more patient. You're redefining what
+         patience means to you — from endurance to trust.
+```
+
+---
+
 ## What is Recto?
 
 Recto is an **open-source, self-hosted journal backend** for developers. It lets you store, search, and reflect on your thoughts through any AI assistant — no app required.
