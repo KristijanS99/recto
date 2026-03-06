@@ -1,0 +1,30 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+.turbo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Local docs (specs, plans, notes)
+local-docs
+
+# Database
+postgres_data
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Test
+coverage
+
+# Logs
+*.log
