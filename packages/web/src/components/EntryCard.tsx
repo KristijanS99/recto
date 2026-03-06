@@ -13,7 +13,7 @@ function formatDate(iso: string): string {
 export function EntryCard({ entry }: { entry: Entry }) {
   const title =
     entry.title ?? entry.content.slice(0, 80) + (entry.content.length > 80 ? '...' : '');
-  const snippet = entry.content.length > 200 ? entry.content.slice(0, 200) + '...' : entry.content;
+  const snippet = entry.content.length > 200 ? `${entry.content.slice(0, 200)}...` : entry.content;
 
   return (
     <Link
