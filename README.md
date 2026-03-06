@@ -29,55 +29,9 @@
 
 ## See it in action
 
-```
-────────────────────────────────────────────────────────────────
-  Recto · Diarium                              Anno MMXXVI, Martius
-────────────────────────────────────────────────────────────────
-
-Scriptor:   I had mass today and reflected on something the
-            priest said about patience. It really stuck with
-            me — how patience isn't passive, it's an active
-            form of trust.
-
-Librarius:  ✓ Inscriptum in codex.
-            ↳ Tagged: #reflection #faith #patience
-            ↳ Mood: contemplative
-
-            Shall I search the codex for earlier writings
-            on patience?
-
-Scriptor:   Yeah, search my journal for patience.
-
-Librarius:  Found III entries in the codex:
-
-            I.   Martius — "patience isn't passive, it's
-                 an active form of trust"
-            II.  Februarius — "struggling with patience at
-                 work, deadlines piling up"
-            III. Ianuarius — "new year resolution: be more
-                 patient with myself"
-
-            An interesting thread emerges — your understanding
-            of patience has shifted from burden to strength.
-            Shall I compose a reflection?
-
-Scriptor:   Yes, reflect on my relationship with patience.
-
-Librarius:  What the codex reveals...
-
-            In Ianuarius, patience felt like a burden —
-            something you needed to "get better at."
-            By Februarius, you were noticing where it
-            was hard. Now in Martius, you find wisdom in it.
-
-            You are not merely becoming more patient.
-            You are redefining what patience means to you —
-            from endurance to trust.
-
-────────────────────────────────────────────────────────────────
-  finis paginae
-────────────────────────────────────────────────────────────────
-```
+<p align="center">
+  <img src="conversation.png" width="600" alt="A conversation with Claude using Recto — journaling about patience, searching past entries, and reflecting on personal growth. Martius VI, Anno MMXXVI." />
+</p>
 
 ---
 
