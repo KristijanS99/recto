@@ -6,10 +6,16 @@ import type { Database } from './db/connection.js';
 import { authMiddleware } from './middleware/auth.js';
 import { entriesRoutes } from './routes/entries.js';
 import { mediaRoutes } from './routes/media.js';
+import { searchRoutes } from './routes/search.js';
 import { systemRoutes } from './routes/system.js';
 import { entryTagsRoutes, tagsRoutes } from './routes/tags.js';
+import type { EmbeddingProvider } from './services/embedding.js';
 
-export function createApp(db: Database, config: Config) {
+export function createApp(
+  db: Database,
+  config: Config,
+  embeddingProvider?: EmbeddingProvider | null,
+) {
   const app = new Hono();
 
   // Global error handler
@@ -50,6 +56,9 @@ export function createApp(db: Database, config: Config) {
 
   // Tag routes
   app.route('/tags', tagsRoutes(db));
+
+  // Search routes
+  app.route('/search', searchRoutes(db, embeddingProvider ?? null));
 
   // Entry sub-routes (tags, media)
   app.route('/entries', entryTagsRoutes(db));
