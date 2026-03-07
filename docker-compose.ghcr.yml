@@ -1,3 +1,6 @@
+# Use pre-built images from GitHub Container Registry.
+# Usage: docker compose -f docker-compose.ghcr.yml up -d
+
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -16,9 +19,7 @@ services:
       retries: 5
 
   api:
-    build:
-      context: .
-      dockerfile: packages/api/Dockerfile
+    image: ghcr.io/kristijans99/recto-api:latest
     env_file: .env
     environment:
       DATABASE_URL: postgresql://recto:${DB_PASSWORD:-recto}@db:5432/recto
@@ -29,9 +30,7 @@ services:
         condition: service_healthy
 
   mcp:
-    build:
-      context: .
-      dockerfile: packages/mcp/Dockerfile
+    image: ghcr.io/kristijans99/recto-mcp:latest
     environment:
       RECTO_API_URL: http://api:3000
       RECTO_API_KEY: ${RECTO_API_KEY}
@@ -43,9 +42,7 @@ services:
       - api
 
   web:
-    build:
-      context: .
-      dockerfile: packages/web/Dockerfile
+    image: ghcr.io/kristijans99/recto-web:latest
     ports:
       - "${WEB_PORT:-5173}:5173"
     depends_on:
