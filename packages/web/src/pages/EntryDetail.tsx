@@ -1,6 +1,9 @@
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
 import { useEntry } from '../api/queries';
+import { SkeletonDetail } from '../components/Skeleton';
 import { TagBadge } from '../components/TagBadge';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -18,8 +21,10 @@ export function EntryDetail() {
   const navigate = useNavigate();
   const { data: entry, isLoading, isError, error } = useEntry(id ?? '');
 
+  useDocumentTitle(entry?.title ?? 'Entry');
+
   if (!id) return <p className="text-sand-500">Entry not found.</p>;
-  if (isLoading) return <p className="text-sand-500">Loading...</p>;
+  if (isLoading) return <SkeletonDetail />;
   if (isError) return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
   if (!entry) return <p className="text-sand-500">Entry not found.</p>;
 
@@ -28,9 +33,10 @@ export function EntryDetail() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="text-sm text-sand-500 hover:text-sand-700 dark:hover:text-sand-300 mb-6 inline-block"
+        className="flex items-center gap-1.5 text-sm text-sand-500 hover:text-sand-700 dark:hover:text-sand-300 mb-6 transition-colors active:scale-[0.98]"
       >
-        &larr; Back
+        <ArrowLeft className="w-4 h-4" />
+        Back
       </button>
 
       <article>
@@ -38,7 +44,9 @@ export function EntryDetail() {
           {entry.title ?? 'Untitled'}
         </h1>
 
-        <time className="text-sm text-sand-500 block mb-4">{formatDate(entry.created_at)}</time>
+        <time className="text-sm text-sand-500 dark:text-sand-400 block mb-4">
+          {formatDate(entry.created_at)}
+        </time>
 
         {/* Metadata */}
         <div className="flex items-center gap-3 flex-wrap mb-6">
@@ -75,12 +83,14 @@ export function EntryDetail() {
             <div className="flex flex-col gap-3">
               {entry.media.map((item) => (
                 <div key={item.url} className="flex items-center gap-3">
-                  <span className="text-xs uppercase text-sand-500">{item.type}</span>
+                  <span className="text-xs uppercase text-sand-500 dark:text-sand-400">
+                    {item.type}
+                  </span>
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-sand-700 dark:text-sand-300 underline truncate"
+                    className="text-sm text-sand-700 dark:text-sand-300 underline truncate hover:text-sand-900 dark:hover:text-sand-100 transition-colors"
                   >
                     {item.caption ?? item.url}
                   </a>
