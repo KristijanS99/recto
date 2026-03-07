@@ -2,8 +2,8 @@ export interface Entry {
   id: string;
   content: string;
   title: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   tags: string[] | null;
   mood: string | null;
   people: string[] | null;

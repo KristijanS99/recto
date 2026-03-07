@@ -3,9 +3,10 @@ import { eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import * as schema from '../db/schema.js';
-import { entries } from '../db/schema.js';
+import { entries, instructions, prompts } from '../db/schema.js';
+import { DEFAULT_PROMPTS } from '../db/seed.js';
 
 let container: StartedPostgreSqlContainer;
 let client: ReturnType<typeof postgres>;
@@ -173,5 +174,79 @@ describe('entry CRUD via Drizzle', () => {
 
     expect(result.length).toBeGreaterThanOrEqual(1);
     expect(result[0]?.content).toContain('mountains');
+  });
+});
+
+describe('instructions table', () => {
+  beforeEach(async () => {
+    await db.delete(instructions);
+  });
+
+  it('should create and read instructions', async () => {
+    const [inserted] = await db
+      .insert(instructions)
+      .values({ content: 'Test instructions' })
+      .returning();
+
+    expect(inserted!.id).toBeTruthy();
+    expect(inserted!.content).toBe('Test instructions');
+    expect(inserted!.updatedAt).toBeInstanceOf(Date);
+  });
+
+  it('should update instructions', async () => {
+    const [inserted] = await db.insert(instructions).values({ content: 'Original' }).returning();
+
+    const [updated] = await db
+      .update(instructions)
+      .set({ content: 'Updated' })
+      .where(eq(instructions.id, inserted!.id))
+      .returning();
+
+    expect(updated!.content).toBe('Updated');
+  });
+});
+
+describe('prompts table', () => {
+  beforeEach(async () => {
+    await db.delete(prompts);
+  });
+
+  it('should create and read a prompt', async () => {
+    const [inserted] = await db
+      .insert(prompts)
+      .values({
+        name: 'test-prompt',
+        description: 'Test Prompt',
+        content: 'Tell me about your day',
+        isDefault: false,
+      })
+      .returning();
+
+    expect(inserted!.id).toBeTruthy();
+    expect(inserted!.name).toBe('test-prompt');
+    expect(inserted!.isDefault).toBe(false);
+  });
+
+  it('should enforce unique name constraint', async () => {
+    await db.insert(prompts).values({
+      name: 'unique-name',
+      description: 'First',
+      content: 'First content',
+    });
+
+    await expect(
+      db.insert(prompts).values({
+        name: 'unique-name',
+        description: 'Second',
+        content: 'Second content',
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('should seed all default prompts', async () => {
+    await db.insert(prompts).values(DEFAULT_PROMPTS);
+    const all = await db.select().from(prompts);
+    expect(all).toHaveLength(6);
+    expect(all.every((p) => p.isDefault === true)).toBe(true);
   });
 });

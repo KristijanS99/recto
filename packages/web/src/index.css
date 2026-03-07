@@ -43,3 +43,71 @@ body {
   @apply bg-sand-50 text-sand-900 dark:bg-sand-900 dark:text-sand-50;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
+
+/* Notebook page styles */
+.notebook-page {
+  --line-height: 28px;
+  --margin-left: 40px;
+  --line-color: #e0d9cc;
+  --margin-color: #d4a0a0;
+  --paper-bg: #fdfcfa;
+  position: relative;
+  background-color: var(--paper-bg);
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent calc(var(--line-height) - 1px),
+    var(--line-color) calc(var(--line-height) - 1px),
+    var(--line-color) var(--line-height)
+  );
+  background-size: 100% var(--line-height);
+  background-position-y: calc(var(--line-height) - 1px);
+  border-radius: 2px 8px 8px 2px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.notebook-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--margin-left);
+  bottom: 0;
+  width: 1px;
+  background-color: var(--margin-color);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Page curl shadow */
+.notebook-page::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(-135deg, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+  border-radius: 0 0 8px 0;
+  pointer-events: none;
+}
+
+/* Dark mode notebook */
+:is(.dark .notebook-page) {
+  --line-color: #3f382d;
+  --margin-color: #8b6060;
+  --paper-bg: #2a2520;
+}
+
+/* Notebook content area — text sits to the right of the margin */
+.notebook-content {
+  padding-left: calc(var(--margin-left) + 16px);
+}
+
+/* Notebook lined text — line-height matches ruled lines */
+.notebook-lines p {
+  line-height: var(--line-height);
+  margin: 0;
+  padding: 0;
+}
