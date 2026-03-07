@@ -1,7 +1,10 @@
+import { Loader2, SearchX } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useSearch } from '../api/queries';
+import { EmptyState } from '../components/EmptyState';
 import { TagBadge } from '../components/TagBadge';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const MODES = ['hybrid', 'keyword', 'semantic'] as const;
 
@@ -20,6 +23,8 @@ export function Search() {
 
   const { data, isLoading, isError, error } = useSearch(query, mode);
 
+  useDocumentTitle('Search');
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setQuery(input.trim());
@@ -36,11 +41,11 @@ export function Search() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Search your journal..."
-            className="flex-1 px-4 py-2 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-900 dark:text-sand-100 placeholder:text-sand-400 focus:outline-none focus:ring-2 focus:ring-sand-300 dark:focus:ring-sand-600"
+            className="flex-1 px-4 py-2 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-900 dark:text-sand-100 placeholder:text-sand-400 focus:outline-none focus:ring-2 focus:ring-sand-400 dark:focus:ring-sand-500 transition-shadow"
           />
           <button
             type="submit"
-            className="px-4 py-2 rounded-lg bg-sand-700 dark:bg-sand-200 text-white dark:text-sand-900 text-sm font-medium hover:bg-sand-800 dark:hover:bg-sand-100 transition-colors"
+            className="px-4 py-2 rounded-lg bg-sand-700 dark:bg-sand-200 text-white dark:text-sand-900 text-sm font-medium hover:bg-sand-800 dark:hover:bg-sand-100 transition-all duration-200 active:scale-[0.98]"
           >
             Search
           </button>
@@ -55,7 +60,7 @@ export function Search() {
                 setMode(m);
                 if (query) setQuery(input.trim());
               }}
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+              className={`px-3 py-1 text-xs rounded-full transition-all duration-150 ${
                 mode === m
                   ? 'bg-sand-700 dark:bg-sand-200 text-white dark:text-sand-900'
                   : 'bg-sand-100 dark:bg-sand-800 text-sand-600 dark:text-sand-400 hover:bg-sand-200 dark:hover:bg-sand-700'
@@ -67,11 +72,15 @@ export function Search() {
         </div>
       </form>
 
-      {isLoading && <p className="text-sand-500">Searching...</p>}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 text-sand-400 animate-spin-slow" />
+        </div>
+      )}
       {isError && <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>}
 
       {data && (
-        <p className="text-sm text-sand-500 mb-4">
+        <p className="text-sm text-sand-500 dark:text-sand-400 mb-4">
           {data.total} result{data.total !== 1 ? 's' : ''} (mode: {data.mode_used})
         </p>
       )}
@@ -81,13 +90,13 @@ export function Search() {
           <Link
             key={r.entry.id}
             to={`/entry/${r.entry.id}`}
-            className="block p-5 rounded-xl border border-sand-200 dark:border-sand-700 hover:border-sand-300 dark:hover:border-sand-600 bg-white dark:bg-sand-800 transition-colors"
+            className="block p-5 rounded-xl border border-sand-200 dark:border-sand-700 hover:border-sand-300 dark:hover:border-sand-600 bg-white dark:bg-sand-800 transition-all duration-200 hover:scale-[1.01] hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-3 mb-2">
               <h3 className="font-medium text-sand-800 dark:text-sand-100">
                 {r.entry.title ?? 'Untitled'}
               </h3>
-              <time className="text-xs text-sand-500 shrink-0">
+              <time className="text-xs text-sand-500 dark:text-sand-400 shrink-0">
                 {formatDate(r.entry.created_at)}
               </time>
             </div>
@@ -108,7 +117,11 @@ export function Search() {
       </div>
 
       {query && data && data.results.length === 0 && (
-        <p className="text-sand-500 text-center py-12">No results found.</p>
+        <EmptyState
+          icon={SearchX}
+          title="No results found"
+          description={`Nothing matched "${query}". Try different keywords or another search mode.`}
+        />
       )}
     </div>
   );
