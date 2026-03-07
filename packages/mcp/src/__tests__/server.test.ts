@@ -81,6 +81,57 @@ function createMockClient(): RectoClient {
       entries_used: [{ id: 'test-id-1', title: 'Entry 1', created_at: '2024-01-15T10:00:00Z' }],
       period: { from: '2024-01-01T00:00:00Z', to: '2024-01-31T23:59:59Z' },
     }),
+    getInstructions: vi.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000001',
+      content: 'Test instructions content',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    }),
+    getPrompts: vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: '00000000-0000-0000-0000-000000000010',
+          name: 'daily-checkin',
+          description: 'Daily Check-in',
+          content: 'Walk me through your day.',
+          is_default: true,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000011',
+          name: 'weekly-review',
+          description: 'Weekly Review',
+          content: 'Help me review my week.',
+          is_default: true,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000012',
+          name: 'monthly-retrospective',
+          description: 'Monthly Retrospective',
+          content: 'Help me reflect on the past month.',
+          is_default: true,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000013',
+          name: 'gratitude',
+          description: 'Gratitude',
+          content: 'What are you grateful for?',
+          is_default: true,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000014',
+          name: 'idea-capture',
+          description: 'Idea Capture',
+          content: 'Tell me about your idea.',
+          is_default: true,
+        },
+        {
+          id: '00000000-0000-0000-0000-000000000015',
+          name: 'goal-setting',
+          description: 'Goal Setting',
+          content: 'What goal do you want to set?',
+          is_default: true,
+        },
+      ],
+    }),
   } as unknown as RectoClient;
 }
 
@@ -272,5 +323,58 @@ describe('MCP Tools', () => {
     const result = await mcpClient.callTool({ name: 'get_entry', arguments: { id: 'bad-id' } });
     // MCP SDK returns isError: true for tool errors
     expect(result.isError).toBe(true);
+  });
+});
+
+describe('get_instructions tool', () => {
+  it('should return instructions content', async () => {
+    const client = createMockClient();
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test-client', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.callTool({ name: 'get_instructions', arguments: {} });
+    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
+    expect(text).toContain('Test instructions content');
+    expect(client.getInstructions).toHaveBeenCalled();
+  });
+});
+
+describe('MCP prompts', () => {
+  it('should list available prompts', async () => {
+    const client = createMockClient();
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test-client', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.listPrompts();
+    expect(result.prompts.length).toBeGreaterThan(0);
+    const names = result.prompts.map((p) => p.name);
+    expect(names).toContain('daily-checkin');
+    expect(names).toContain('weekly-review');
+  });
+
+  it('should return prompt content when invoked', async () => {
+    const client = createMockClient();
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test-client', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.getPrompt({ name: 'daily-checkin' });
+    const msg = result.messages[0];
+    const text = typeof msg?.content === 'object' && 'text' in msg.content ? msg.content.text : '';
+    expect(text).toContain('Walk me through your day');
   });
 });
