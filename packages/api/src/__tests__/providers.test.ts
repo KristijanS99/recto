@@ -95,7 +95,7 @@ describe('NullEmbedding', () => {
   const provider = new NullEmbedding();
 
   it('embed returns empty array', async () => {
-    const result = await provider.embed('hello');
+    const result = await provider.embed();
     expect(result).toEqual([]);
   });
 
@@ -149,12 +149,12 @@ describe('NullLLM', () => {
   const provider = new NullLLM();
 
   it('enrich returns empty enrichment result', async () => {
-    const result = await provider.enrich('some content');
+    const result = await provider.enrich();
     expect(result).toEqual({ title: '', tags: [], mood: null, people: [] });
   });
 
   it('generate returns empty string', async () => {
-    const result = await provider.generate('some prompt');
+    const result = await provider.generate();
     expect(result).toBe('');
   });
 });

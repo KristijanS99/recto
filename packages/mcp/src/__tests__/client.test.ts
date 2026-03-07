@@ -28,7 +28,7 @@ describe('RectoClient', () => {
       const client = createClient('http://localhost:3000/');
       mockFetch.mockResolvedValue(mockResponse({ data: [] }));
       await client.listEntries();
-      const url = mockFetch.mock.calls[0][0] as string;
+      const url = mockFetch.mock.calls[0]![0] as string;
       expect(url).toBe('http://localhost:3000/entries');
     });
 
@@ -36,7 +36,7 @@ describe('RectoClient', () => {
       const client = createClient('http://localhost:3000', 'my-secret');
       mockFetch.mockResolvedValue(mockResponse({}));
       await client.getEntry('1');
-      const init = mockFetch.mock.calls[0][1] as RequestInit;
+      const init = mockFetch.mock.calls[0]![1] as RequestInit;
       const headers = init.headers as Record<string, string>;
       expect(headers['Authorization']).toBe('Bearer my-secret');
       expect(headers['Content-Type']).toBe('application/json');
@@ -72,7 +72,7 @@ describe('RectoClient', () => {
       const result = await client.createEntry(entry);
 
       expect(result).toEqual({ id: '1', ...entry });
-      const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, init] = mockFetch.mock.calls[0]! as [string, RequestInit];
       expect(url).toBe('http://localhost:3000/entries');
       expect(init.method).toBe('POST');
       expect(JSON.parse(init.body as string)).toEqual(entry);
@@ -89,7 +89,7 @@ describe('RectoClient', () => {
       const result = await client.getEntry('abc');
 
       expect(result).toEqual({ id: 'abc', content: 'test' });
-      const url = mockFetch.mock.calls[0][0] as string;
+      const url = mockFetch.mock.calls[0]![0] as string;
       expect(url).toBe('http://localhost:3000/entries/abc');
     });
   });
@@ -104,7 +104,7 @@ describe('RectoClient', () => {
 
       await client.listEntries();
 
-      const url = mockFetch.mock.calls[0][0] as string;
+      const url = mockFetch.mock.calls[0]![0] as string;
       expect(url).toBe('http://localhost:3000/entries');
     });
 
@@ -121,7 +121,7 @@ describe('RectoClient', () => {
         people: 'Alice',
       });
 
-      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      const url = new URL(mockFetch.mock.calls[0]![0] as string);
       expect(url.searchParams.get('limit')).toBe('10');
       expect(url.searchParams.get('cursor')).toBe('cur1');
       expect(url.searchParams.get('tag')).toBe('work');
@@ -140,7 +140,7 @@ describe('RectoClient', () => {
 
       await client.updateEntry('1', { content: 'updated' });
 
-      const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, init] = mockFetch.mock.calls[0]! as [string, RequestInit];
       expect(url).toBe('http://localhost:3000/entries/1');
       expect(init.method).toBe('PATCH');
       expect(JSON.parse(init.body as string)).toEqual({ content: 'updated' });
@@ -157,7 +157,7 @@ describe('RectoClient', () => {
       const result = await client.deleteEntry('1');
 
       expect(result).toEqual({ message: 'deleted' });
-      const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, init] = mockFetch.mock.calls[0]! as [string, RequestInit];
       expect(url).toBe('http://localhost:3000/entries/1');
       expect(init.method).toBe('DELETE');
     });
@@ -172,7 +172,7 @@ describe('RectoClient', () => {
 
       await client.addTags('e1', ['a', 'b']);
 
-      const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, init] = mockFetch.mock.calls[0]! as [string, RequestInit];
       expect(url).toBe('http://localhost:3000/entries/e1/tags');
       expect(init.method).toBe('POST');
       expect(JSON.parse(init.body as string)).toEqual({ tags: ['a', 'b'] });
@@ -189,7 +189,7 @@ describe('RectoClient', () => {
 
       await client.addMedia('e1', media);
 
-      const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, init] = mockFetch.mock.calls[0]! as [string, RequestInit];
       expect(url).toBe('http://localhost:3000/entries/e1/media');
       expect(init.method).toBe('POST');
       expect(JSON.parse(init.body as string)).toEqual(media);
@@ -212,7 +212,7 @@ describe('RectoClient', () => {
         to: '2024-06-30',
       });
 
-      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      const url = new URL(mockFetch.mock.calls[0]![0] as string);
       expect(url.pathname).toBe('/search');
       expect(url.searchParams.get('q')).toBe('hello world');
       expect(url.searchParams.get('mode')).toBe('semantic');
@@ -228,7 +228,7 @@ describe('RectoClient', () => {
 
       await client.search({ q: 'test' });
 
-      const url = new URL(mockFetch.mock.calls[0][0] as string);
+      const url = new URL(mockFetch.mock.calls[0]![0] as string);
       expect(url.searchParams.get('q')).toBe('test');
       expect(url.searchParams.has('mode')).toBe(false);
       expect(url.searchParams.has('limit')).toBe(false);
@@ -246,7 +246,7 @@ describe('RectoClient', () => {
       const result = await client.getInstructions();
 
       expect(result).toEqual(data);
-      const url = mockFetch.mock.calls[0][0] as string;
+      const url = mockFetch.mock.calls[0]![0] as string;
       expect(url).toBe('http://localhost:3000/instructions');
     });
   });
@@ -272,7 +272,7 @@ describe('RectoClient', () => {
       const result = await client.getPrompts();
 
       expect(result).toEqual(data);
-      const url = mockFetch.mock.calls[0][0] as string;
+      const url = mockFetch.mock.calls[0]![0] as string;
       expect(url).toBe('http://localhost:3000/prompts');
     });
   });
@@ -298,7 +298,7 @@ describe('RectoClient', () => {
       const result = await client.reflect(reqData);
 
       expect(result).toEqual(resData);
-      const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+      const [url, init] = mockFetch.mock.calls[0]! as [string, RequestInit];
       expect(url).toBe('http://localhost:3000/reflect');
       expect(init.method).toBe('POST');
       expect(JSON.parse(init.body as string)).toEqual(reqData);
