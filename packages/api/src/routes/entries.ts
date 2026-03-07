@@ -108,6 +108,15 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     const id = c.req.param('id');
     const body = c.req.valid('json');
 
+    // If no fields to update, return the existing entry as-is
+    if (Object.keys(body).length === 0) {
+      const [existing] = await db.select().from(entries).where(eq(entries.id, id));
+      if (!existing) {
+        return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      }
+      return c.json(existing);
+    }
+
     const [updated] = await db.update(entries).set(body).where(eq(entries.id, id)).returning();
 
     if (!updated) {

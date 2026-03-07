@@ -114,12 +114,12 @@ describe('PATCH /entries/:id validation', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 500 for empty object update (Drizzle rejects empty set)', async () => {
+  it('accepts empty object update as no-op', async () => {
     const entry = await createEntry('original');
     const res = await jsonReq(`/entries/${entry.id}`, {}, 'PATCH');
-    // Drizzle ORM throws "No values to set" when .set({}) is called,
-    // which surfaces as a 500. This documents the current behavior.
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.content).toBe('original');
   });
 });
 
