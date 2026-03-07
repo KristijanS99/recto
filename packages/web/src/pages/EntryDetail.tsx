@@ -47,7 +47,7 @@ export function EntryDetail() {
           </h1>
 
           <time className="text-sm text-sand-500 dark:text-sand-400 block mb-4">
-            {formatDate(entry.created_at)}
+            {formatDate(entry.createdAt)}
           </time>
 
           {/* Metadata */}

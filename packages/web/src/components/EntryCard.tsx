@@ -35,7 +35,7 @@ export function EntryCard({ entry }: { entry: Entry }) {
         </p>
         <div className="flex items-center gap-2 flex-wrap">
           <time className="text-xs text-sand-500 dark:text-sand-500">
-            {formatDate(entry.created_at)}
+            {formatDate(entry.createdAt)}
           </time>
           {entry.tags?.map((tag) => (
             <TagBadge key={tag} tag={tag} />

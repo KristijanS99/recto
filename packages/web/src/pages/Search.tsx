@@ -98,7 +98,7 @@ export function Search() {
                   {r.entry.title ?? 'Untitled'}
                 </h3>
                 <time className="text-xs text-sand-500 dark:text-sand-400 shrink-0">
-                  {formatDate(r.entry.created_at)}
+                  {formatDate(r.entry.createdAt)}
                 </time>
               </div>
               {r.highlights?.[0] && (
