@@ -378,3 +378,138 @@ describe('MCP prompts', () => {
     expect(text).toContain('Walk me through your day');
   });
 });
+
+describe('Edge cases — search, list, format, prompts', () => {
+  it('search_entries returns empty message when no results', async () => {
+    const client = createMockClient();
+    (client.search as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      results: [],
+      mode_used: 'keyword',
+      total: 0,
+    });
+
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.callTool({
+      name: 'search_entries',
+      arguments: { query: 'nonexistent' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
+    expect(text).toBe('No matching entries found.');
+  });
+
+  it('list_entries shows "More entries available" when has_more is true', async () => {
+    const client = createMockClient();
+    (client.listEntries as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: [
+        {
+          id: 'test-id-1',
+          content: 'First entry',
+          title: 'Entry 1',
+          tags: [],
+          mood: null,
+          people: [],
+          created_at: '2024-01-15T10:00:00Z',
+        },
+      ],
+      next_cursor: 'cursor-abc',
+      has_more: true,
+    });
+
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.callTool({ name: 'list_entries', arguments: {} });
+    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
+    expect(text).toContain('_(More entries available)_');
+  });
+
+  it('truncates content longer than 200 characters', async () => {
+    const longContent = 'A'.repeat(300);
+    const client = createMockClient();
+    (client.getEntry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      id: 'test-id-long',
+      content: longContent,
+      title: 'Long Entry',
+      tags: [],
+      mood: null,
+      people: [],
+      created_at: '2024-01-15T10:00:00Z',
+    });
+
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.callTool({
+      name: 'get_entry',
+      arguments: { id: 'test-id-long' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
+    expect(text).toContain('…');
+    expect(text).not.toContain(longContent);
+  });
+
+  it('shows "Untitled" when entry title is null', async () => {
+    const client = createMockClient();
+    (client.getEntry as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      id: 'test-id-notitle',
+      content: 'Some content',
+      title: null,
+      tags: [],
+      mood: null,
+      people: [],
+      created_at: '2024-01-15T10:00:00Z',
+    });
+
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.callTool({
+      name: 'get_entry',
+      arguments: { id: 'test-id-notitle' },
+    });
+    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
+    expect(text).toContain('Untitled');
+  });
+
+  it('returns "not found" when prompt data is empty', async () => {
+    const client = createMockClient();
+    (client.getPrompts as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: [],
+    });
+
+    const server = createMcpServer(client);
+    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    const mcpClient = new Client({ name: 'test', version: '1.0.0' });
+    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+    const result = await mcpClient.getPrompt({ name: 'daily-checkin' });
+    const msg = result.messages[0];
+    const text = typeof msg?.content === 'object' && 'text' in msg.content ? msg.content.text : '';
+    expect(text).toContain('not found');
+  });
+});
