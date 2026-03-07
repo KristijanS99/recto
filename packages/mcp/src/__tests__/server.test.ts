@@ -513,3 +513,43 @@ describe('Edge cases — search, list, format, prompts', () => {
     expect(text).toContain('not found');
   });
 });
+
+describe('individual prompt handlers', () => {
+  const promptNames = [
+    'daily-checkin',
+    'weekly-review',
+    'monthly-retrospective',
+    'gratitude',
+    'idea-capture',
+    'goal-setting',
+  ] as const;
+
+  const expectedContent: Record<string, string> = {
+    'daily-checkin': 'Walk me through your day.',
+    'weekly-review': 'Help me review my week.',
+    'monthly-retrospective': 'Help me reflect on the past month.',
+    gratitude: 'What are you grateful for?',
+    'idea-capture': 'Tell me about your idea.',
+    'goal-setting': 'What goal do you want to set?',
+  };
+
+  for (const name of promptNames) {
+    it(`returns content for "${name}" prompt`, async () => {
+      const client = createMockClient();
+      const server = createMcpServer(client);
+      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+      const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+
+      const [ct, st] = InMemoryTransport.createLinkedPair();
+      const mcpClient = new Client({ name: 'test', version: '1.0.0' });
+      await Promise.all([mcpClient.connect(ct), server.connect(st)]);
+
+      const result = await mcpClient.getPrompt({ name });
+      const msg = result.messages[0];
+      expect(msg?.role).toBe('user');
+      const text =
+        typeof msg?.content === 'object' && 'text' in msg.content ? msg.content.text : '';
+      expect(text).toBe(expectedContent[name]);
+    });
+  }
+});
