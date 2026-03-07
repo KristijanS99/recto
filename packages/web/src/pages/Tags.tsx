@@ -1,5 +1,9 @@
+import { Tag } from 'lucide-react';
 import { Link } from 'react-router';
 import { useEntries } from '../api/queries';
+import { EmptyState } from '../components/EmptyState';
+import { SkeletonList } from '../components/Skeleton';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function Tags() {
   const { data, isLoading, isError, error } = useEntries({ limit: 100 });
@@ -13,15 +17,21 @@ export function Tags() {
   }
   const sorted = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
 
+  useDocumentTitle('Tags');
+
   return (
     <div>
       <h2 className="text-2xl font-semibold text-sand-800 dark:text-sand-100 mb-6">Tags</h2>
 
-      {isLoading && <p className="text-sand-500">Loading...</p>}
+      {isLoading && <SkeletonList count={2} />}
       {isError && <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>}
 
       {sorted.length === 0 && !isLoading && (
-        <p className="text-sand-500 text-center py-12">No tags found.</p>
+        <EmptyState
+          icon={Tag}
+          title="No tags yet"
+          description="Tags will appear here once you start tagging your entries"
+        />
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -29,10 +39,10 @@ export function Tags() {
           <Link
             key={tag}
             to={`/?tag=${encodeURIComponent(tag)}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-700 dark:text-sand-300 hover:border-sand-300 dark:hover:border-sand-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-700 dark:text-sand-300 hover:border-sand-300 dark:hover:border-sand-600 transition-all duration-200 hover:scale-[1.02] hover:shadow-sm"
           >
             <span className="text-sm">#{tag}</span>
-            <span className="text-xs text-sand-400">{count}</span>
+            <span className="text-xs text-sand-400 dark:text-sand-500">{count}</span>
           </Link>
         ))}
       </div>
