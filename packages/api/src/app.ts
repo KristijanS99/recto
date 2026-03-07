@@ -6,7 +6,9 @@ import type { Database } from './db/connection.js';
 import { createLogger } from './lib/logger.js';
 import { authMiddleware } from './middleware/auth.js';
 import { entriesRoutes } from './routes/entries.js';
+import { instructionsRoutes } from './routes/instructions.js';
 import { mediaRoutes } from './routes/media.js';
+import { promptsRoutes } from './routes/prompts.js';
 import { reflectRoutes } from './routes/reflect.js';
 import { searchRoutes } from './routes/search.js';
 import { systemRoutes } from './routes/system.js';
@@ -88,6 +90,10 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
   // Entry sub-routes (tags, media)
   app.route('/entries', entryTagsRoutes(db));
   app.route('/entries', mediaRoutes(db));
+
+  // Instructions & prompts routes
+  app.route('/instructions', instructionsRoutes(db));
+  app.route('/prompts', promptsRoutes(db));
 
   return app;
 }
