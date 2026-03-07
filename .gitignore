@@ -27,5 +27,8 @@ postgres_data
 # Test
 coverage
 
+# Worktrees
+.worktrees
+
 # Logs
 *.log
