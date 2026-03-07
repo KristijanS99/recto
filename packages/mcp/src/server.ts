@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { TtlCache } from './cache.js';
 import type { RectoClient } from './client.js';
 
 function formatDate(iso: string): string {
@@ -27,10 +28,58 @@ function formatEntry(entry: Record<string, unknown>): string {
 }
 
 export function createMcpServer(client: RectoClient): McpServer {
-  const server = new McpServer({
-    name: 'recto',
-    version: '0.1.0',
-  });
+  const instructionsCache = new TtlCache(() => client.getInstructions());
+  const promptsCache = new TtlCache(() => client.getPrompts());
+
+  const server = new McpServer(
+    { name: 'recto', version: '0.1.0' },
+    {
+      instructions:
+        'Call the get_instructions tool at the start of every conversation to receive your operating instructions.',
+    },
+  );
+
+  // --- get_instructions (fallback tool) ---
+  server.registerTool(
+    'get_instructions',
+    {
+      description:
+        'Retrieve your operating instructions for this journal. Call this at the start of every conversation to understand how you should behave.',
+      inputSchema: {},
+    },
+    async () => {
+      const data = await instructionsCache.get();
+      return {
+        content: [{ type: 'text' as const, text: data.content }],
+      };
+    },
+  );
+
+  // --- MCP Prompts ---
+  const promptNames = [
+    'daily-checkin',
+    'weekly-review',
+    'monthly-retrospective',
+    'gratitude',
+    'idea-capture',
+    'goal-setting',
+  ];
+
+  for (const name of promptNames) {
+    server.prompt(name, `Journaling prompt: ${name}`, async () => {
+      const { data } = await promptsCache.get();
+      const prompt = data.find((p) => p.name === name);
+      const text = prompt?.content ?? `Prompt "${name}" not found.`;
+      return {
+        messages: [
+          {
+            role: 'user' as const,
+            content: { type: 'text' as const, text },
+          },
+        ],
+      };
+    });
+  }
 
   // --- create_entry ---
   server.registerTool(

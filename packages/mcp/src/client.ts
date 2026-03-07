@@ -134,6 +134,26 @@ export class RectoClient {
     }>(`/search?${query.toString()}`);
   }
 
+  // --- Instructions ---
+
+  async getInstructions(): Promise<{ id: string; content: string; updated_at: string }> {
+    return this.request('/instructions');
+  }
+
+  // --- Prompts ---
+
+  async getPrompts(): Promise<{
+    data: Array<{
+      id: string;
+      name: string;
+      description: string;
+      content: string;
+      is_default: boolean;
+    }>;
+  }> {
+    return this.request('/prompts');
+  }
+
   // --- Reflect ---
 
   async reflect(data: { query: string; from_date?: string; to_date?: string; limit?: number }) {
