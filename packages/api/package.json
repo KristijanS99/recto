@@ -7,7 +7,7 @@
     "build": "tsup",
     "dev": "tsup --watch --onSuccess 'node dist/index.js'",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "TESTCONTAINERS_RYUK_DISABLED=true vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
