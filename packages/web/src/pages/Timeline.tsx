@@ -1,6 +1,10 @@
+import { BookOpen } from 'lucide-react';
 import { useSearchParams } from 'react-router';
 import { useEntries } from '../api/queries';
+import { EmptyState } from '../components/EmptyState';
 import { EntryCard } from '../components/EntryCard';
+import { SkeletonList } from '../components/Skeleton';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function Timeline() {
   const [searchParams] = useSearchParams();
@@ -9,6 +13,8 @@ export function Timeline() {
     useEntries({ tag, limit: 10 });
 
   const entries = data?.pages.flatMap((p) => p.data) ?? [];
+
+  useDocumentTitle(tag ? `#${tag}` : 'Timeline');
 
   return (
     <div>
@@ -19,14 +25,14 @@ export function Timeline() {
         {tag && (
           <a
             href="/"
-            className="text-sm text-sand-500 hover:text-sand-700 dark:hover:text-sand-300"
+            className="text-sm text-sand-500 hover:text-sand-700 dark:hover:text-sand-300 transition-colors"
           >
             clear filter
           </a>
         )}
       </div>
 
-      {isLoading && <p className="text-sand-500">Loading entries...</p>}
+      {isLoading && <SkeletonList count={3} />}
       {isError && <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>}
 
       <div className="flex flex-col gap-3">
@@ -36,7 +42,13 @@ export function Timeline() {
       </div>
 
       {entries.length === 0 && !isLoading && (
-        <p className="text-sand-500 text-center py-12">No entries yet.</p>
+        <EmptyState
+          icon={BookOpen}
+          title="No entries yet"
+          description={
+            tag ? `No entries tagged with #${tag}` : 'Start journaling to see your entries here'
+          }
+        />
       )}
 
       {hasNextPage && (
@@ -44,7 +56,7 @@ export function Timeline() {
           type="button"
           onClick={() => fetchNextPage()}
           disabled={isFetchingNextPage}
-          className="mt-6 w-full py-2 text-sm text-sand-600 dark:text-sand-400 border border-sand-200 dark:border-sand-700 rounded-lg hover:bg-sand-100 dark:hover:bg-sand-800 transition-colors disabled:opacity-50"
+          className="mt-6 w-full py-2 text-sm text-sand-600 dark:text-sand-400 border border-sand-200 dark:border-sand-700 rounded-lg hover:bg-sand-100 dark:hover:bg-sand-800 transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
         >
           {isFetchingNextPage ? 'Loading...' : 'Load more'}
         </button>
