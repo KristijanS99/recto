@@ -8,6 +8,13 @@
       "when": 1772823416778,
       "tag": "0000_abandoned_night_nurse",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772897224914,
+      "tag": "0001_clean_human_fly",
+      "breakpoints": true
     }
   ]
 }
