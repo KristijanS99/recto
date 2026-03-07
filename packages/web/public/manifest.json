@@ -1,0 +1,21 @@
+{
+  "name": "Recto",
+  "short_name": "Recto",
+  "description": "Open-source, self-hosted journal for developers",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#3f382d",
+  "background_color": "#faf8f5",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
