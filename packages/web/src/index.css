@@ -12,6 +12,31 @@
   --color-sand-700: #5e5343;
   --color-sand-800: #3f382d;
   --color-sand-900: #1f1c16;
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-pulse-soft: pulse-soft 1.5s ease-in-out infinite;
+  --animate-spin-slow: spin 1s linear infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 body {
