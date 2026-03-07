@@ -69,6 +69,26 @@ export function decodeCursor(cursor: string): { createdAt: Date; id: string } | 
   }
 }
 
+// --- Instructions ---
+export const updateInstructionsSchema = z.object({
+  content: z.string().min(1),
+});
+
+// --- Prompts ---
+export const createPromptSchema = z.object({
+  name: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9-]+$/, 'Name must be a lowercase slug (letters, numbers, hyphens)'),
+  description: z.string().min(1),
+  content: z.string().min(1),
+});
+
+export const updatePromptSchema = z.object({
+  description: z.string().min(1).optional(),
+  content: z.string().min(1).optional(),
+});
+
 // --- Error response shape ---
 export interface ErrorResponse {
   error: {
