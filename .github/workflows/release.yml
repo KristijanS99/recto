@@ -37,6 +37,7 @@ jobs:
           title: "chore: release"
           commit: "chore: release"
           version: pnpm changeset version
+          publish: pnpm changeset tag
           createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
