@@ -39,3 +39,6 @@ coverage
 
 # Playwright screenshots
 landing-*.png
+.gitnexus
+AGENTS.md
+CLAUDE.md
