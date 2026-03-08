@@ -18,6 +18,9 @@ local-docs
 # Database
 postgres_data
 
+# Claude Code
+.claude
+
 # IDE
 .vscode
 .idea
