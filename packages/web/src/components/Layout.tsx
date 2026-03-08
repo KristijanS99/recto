@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Clock, Menu, Search, Tag, X } from 'lucide-react';
+import { Clock, Menu, Search, Settings, Tag, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 
@@ -7,6 +7,7 @@ const NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/', label: 'Timeline', icon: Clock },
   { to: '/search', label: 'Search', icon: Search },
   { to: '/tags', label: 'Tags', icon: Tag },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Layout() {
