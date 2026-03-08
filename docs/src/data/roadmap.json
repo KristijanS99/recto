@@ -1,0 +1,26 @@
+[
+  {
+    "title": "OAuth 2.1 for MCP transport",
+    "type": "feature",
+    "status": "planned",
+    "category": "mcp",
+    "description": "Replace API key auth with OAuth 2.1 for the HTTP/SSE MCP transport layer.",
+    "date": "2026-03-08"
+  },
+  {
+    "title": "Multi-user support",
+    "type": "feature",
+    "status": "planned",
+    "category": "api",
+    "description": "Support multiple users with separate journal spaces and per-user API keys.",
+    "date": "2026-03-07"
+  },
+  {
+    "title": "Export journal entries",
+    "type": "feature",
+    "status": "planned",
+    "category": "web",
+    "description": "Export entries as Markdown or JSON from the web dashboard.",
+    "date": "2026-03-06"
+  }
+]
