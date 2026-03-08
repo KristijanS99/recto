@@ -10,7 +10,7 @@ import { Icon } from '@astrojs/starlight/components';
 		const theme = storedTheme || 'dark';
 		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
 		return {
-			updatePickers(theme = storedTheme || 'auto') {
+			updatePickers(theme = storedTheme || 'dark') {
 				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
 					const select = picker.querySelector('select');
 					if (select) select.value = theme;

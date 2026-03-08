@@ -32,10 +32,6 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 				const saved = localStorage.getItem("recto-theme");
 				if (saved === "light") {
 					document.documentElement.classList.remove("dark");
-				} else if (saved === "dark") {
-					document.documentElement.classList.add("dark");
-				} else if (!window.matchMedia("(prefers-color-scheme: dark)").matches) {
-					document.documentElement.classList.remove("dark");
 				}
 			})();
 		</script>
