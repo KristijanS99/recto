@@ -1,0 +1,138 @@
+---
+import "../styles/global.css";
+
+interface Props {
+	title: string;
+	description: string;
+}
+
+const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content={description} />
+		<title>{title}</title>
+		<link rel="icon" type="image/png" href={`${base}logo.png`} />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<!-- Prevent flash of wrong theme -->
+		<script is:inline>
+			(function () {
+				const saved = localStorage.getItem("recto-theme");
+				if (saved === "light") {
+					document.documentElement.classList.remove("dark");
+				} else if (saved === "dark") {
+					document.documentElement.classList.add("dark");
+				} else if (!window.matchMedia("(prefers-color-scheme: dark)").matches) {
+					document.documentElement.classList.remove("dark");
+				}
+			})();
+		</script>
+	</head>
+	<body
+		class="bg-[#faf8f5] text-[#221e19] antialiased transition-colors duration-300 selection:bg-amber-500/30 selection:text-amber-100 dark:bg-[#0f0d0b] dark:text-[#f0ece5]"
+	>
+		<!-- Noise texture overlay -->
+		<div class="pointer-events-none fixed inset-0 z-50 opacity-[0.02] dark:opacity-[0.03]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E'); background-repeat: repeat; background-size: 256px 256px;"></div>
+
+		<!-- Navigation -->
+		<nav class="fixed top-0 z-40 w-full border-b border-amber-200/60 bg-[#faf8f5]/80 backdrop-blur-xl transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#0f0d0b]/80">
+			<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+				<a href={base} class="flex items-center gap-3 transition-opacity hover:opacity-80">
+					<img src={`${base}logo.png`} alt="Recto" class="h-8 w-8" />
+					<span class="font-['Playfair_Display'] text-xl font-bold text-amber-900 dark:text-amber-100">recto</span>
+				</a>
+				<div class="flex items-center gap-6">
+					<a
+						href={`${base}getting-started`}
+						class="text-sm text-[#6e6150] transition-colors hover:text-amber-600 dark:text-[#c4b8a6] dark:hover:text-amber-400"
+					>
+						Docs
+					</a>
+					<!-- Theme toggle -->
+					<button
+						id="theme-toggle"
+						class="flex h-9 w-9 items-center justify-center rounded-full border border-amber-300/60 bg-amber-50/50 text-amber-700 transition-all hover:border-amber-400/80 hover:bg-amber-100/50 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:border-amber-600/60 dark:hover:bg-amber-900/30"
+						aria-label="Toggle theme"
+					>
+						<!-- Sun icon (shown in dark mode) -->
+						<svg class="hidden h-4 w-4 dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+						</svg>
+						<!-- Moon icon (shown in light mode) -->
+						<svg class="block h-4 w-4 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+						</svg>
+					</button>
+					<a
+						href="https://github.com/KristijanS99/recto"
+						class="flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50/50 px-4 py-2 text-sm text-amber-800 transition-all hover:border-amber-400/80 hover:bg-amber-100/50 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:border-amber-600/60 dark:hover:bg-amber-900/30 dark:hover:text-amber-100"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+						</svg>
+						GitHub
+					</a>
+				</div>
+			</div>
+		</nav>
+
+		<slot />
+
+		<script is:inline>
+			document.getElementById("theme-toggle").addEventListener("click", function () {
+				const html = document.documentElement;
+				const isDark = html.classList.contains("dark");
+				if (isDark) {
+					html.classList.remove("dark");
+					localStorage.setItem("recto-theme", "light");
+				} else {
+					html.classList.add("dark");
+					localStorage.setItem("recto-theme", "dark");
+				}
+			});
+		</script>
+		<style>
+			.hero-slide-left {
+				animation: slideFromLeft 0.8s ease-out both;
+			}
+
+			.hero-slide-right {
+				animation: slideFromRight 0.8s ease-out 0.2s both;
+			}
+
+			@keyframes slideFromLeft {
+				from {
+					opacity: 0;
+					transform: translateX(-2rem);
+				}
+				to {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+
+			@keyframes slideFromRight {
+				from {
+					opacity: 0;
+					transform: translateX(2rem);
+				}
+				to {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+		</style>
+	</body>
+</html>

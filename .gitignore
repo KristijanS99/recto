@@ -3,6 +3,7 @@ node_modules
 
 # Build outputs
 dist
+.astro
 .turbo
 *.bundled_*.mjs
 
@@ -32,3 +33,6 @@ coverage
 
 # Logs
 *.log
+
+# Playwright screenshots
+landing-*.png

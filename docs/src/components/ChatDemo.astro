@@ -1,0 +1,246 @@
+---
+// Tabbed chat demo showing Recto capabilities: Journal, Search, Reflect
+---
+
+<div class="chat-demo mx-auto w-full max-w-lg">
+	<!-- Chat window chrome -->
+	<div class="overflow-hidden rounded-xl border border-amber-200/60 bg-white shadow-xl shadow-amber-200/20 transition-colors duration-300 dark:border-amber-900/30 dark:bg-[#1a1714] dark:shadow-2xl dark:shadow-amber-950/50">
+		<!-- Title bar -->
+		<div class="flex items-center gap-2 border-b border-amber-200/40 bg-amber-50/50 px-4 py-3 transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#151210]">
+			<div class="flex gap-1.5">
+				<div class="h-2.5 w-2.5 rounded-full bg-amber-200 dark:bg-[#3a332b]"></div>
+				<div class="h-2.5 w-2.5 rounded-full bg-amber-200 dark:bg-[#3a332b]"></div>
+				<div class="h-2.5 w-2.5 rounded-full bg-amber-200 dark:bg-[#3a332b]"></div>
+			</div>
+			<span class="ml-2 font-['JetBrains_Mono'] text-[11px] text-amber-400 dark:text-[#6e6150]">Your AI Assistant</span>
+		</div>
+
+		<!-- Tabs -->
+		<div class="flex border-b border-amber-200/40 dark:border-amber-900/20">
+			<button
+				class="chat-tab active flex-1 px-4 py-2.5 font-['JetBrains_Mono'] text-[12px] transition-colors duration-200"
+				data-tab="journal"
+			>
+				Journal
+			</button>
+			<button
+				class="chat-tab flex-1 px-4 py-2.5 font-['JetBrains_Mono'] text-[12px] transition-colors duration-200"
+				data-tab="search"
+			>
+				Search
+			</button>
+			<button
+				class="chat-tab flex-1 px-4 py-2.5 font-['JetBrains_Mono'] text-[12px] transition-colors duration-200"
+				data-tab="reflect"
+			>
+				Reflect
+			</button>
+		</div>
+
+		<!-- Tab panels -->
+		<!-- Journal -->
+		<div class="chat-panel active flex flex-col gap-3 p-5" data-panel="journal">
+			<div class="chat-msg flex justify-end" style="--delay: 0.3s">
+				<div class="max-w-[80%] rounded-2xl rounded-br-md bg-amber-100 px-4 py-2.5 transition-colors duration-300 dark:bg-amber-900/30">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-amber-900 dark:text-amber-100">
+						I had a breakthrough today with the new API design. The recursive approach finally clicked.
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-start" style="--delay: 0.8s">
+				<div class="max-w-[85%] rounded-2xl rounded-bl-md border border-amber-200/40 bg-amber-50/50 px-4 py-2.5 transition-colors duration-300 dark:border-amber-900/15 dark:bg-[#1f1b17]">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#6e6150] dark:text-[#c4b8a6]">
+						I've saved your journal entry. Tagged it with
+						<span class="inline-block rounded bg-amber-200/60 px-1.5 py-0.5 font-['JetBrains_Mono'] text-[11px] text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">#api-design</span>
+						and
+						<span class="inline-block rounded bg-amber-200/60 px-1.5 py-0.5 font-['JetBrains_Mono'] text-[11px] text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">#breakthrough</span>.
+						Mood detected: excited.
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-end" style="--delay: 1.3s">
+				<div class="max-w-[80%] rounded-2xl rounded-br-md bg-amber-100 px-4 py-2.5 transition-colors duration-300 dark:bg-amber-900/30">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-amber-900 dark:text-amber-100">
+						Also, I want to remember that the key insight was treating each node as its own subproblem.
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-start" style="--delay: 1.8s">
+				<div class="max-w-[85%] rounded-2xl rounded-bl-md border border-amber-200/40 bg-amber-50/50 px-4 py-2.5 transition-colors duration-300 dark:border-amber-900/15 dark:bg-[#1f1b17]">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#6e6150] dark:text-[#c4b8a6]">
+						Added to today's entry. I also tagged it
+						<span class="inline-block rounded bg-amber-200/60 px-1.5 py-0.5 font-['JetBrains_Mono'] text-[11px] text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">#recursion</span>.
+						You now have 12 entries this week.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Search -->
+		<div class="chat-panel flex flex-col gap-3 p-5" data-panel="search">
+			<div class="chat-msg flex justify-end" style="--delay: 0.3s">
+				<div class="max-w-[80%] rounded-2xl rounded-br-md bg-amber-100 px-4 py-2.5 transition-colors duration-300 dark:bg-amber-900/30">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-amber-900 dark:text-amber-100">
+						Search my entries about recursion
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-start" style="--delay: 0.8s">
+				<div class="max-w-[85%] rounded-2xl rounded-bl-md border border-amber-200/40 bg-amber-50/50 px-4 py-2.5 transition-colors duration-300 dark:border-amber-900/15 dark:bg-[#1f1b17]">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#6e6150] dark:text-[#c4b8a6]">
+						Found 3 entries. You first wrote about recursion two weeks ago, frustrated with the base case.
+						Today's entry shows real growth.
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-end" style="--delay: 1.3s">
+				<div class="max-w-[80%] rounded-2xl rounded-br-md bg-amber-100 px-4 py-2.5 transition-colors duration-300 dark:bg-amber-900/30">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-amber-900 dark:text-amber-100">
+						Show me the one where I was frustrated
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-start" style="--delay: 1.8s">
+				<div class="max-w-[85%] rounded-2xl rounded-bl-md border border-amber-200/40 bg-amber-50/50 px-4 py-2.5 transition-colors duration-300 dark:border-amber-900/15 dark:bg-[#1f1b17]">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#6e6150] dark:text-[#c4b8a6]">
+						From Feb 22: <em>"I keep hitting infinite loops. The base case for tree traversal is eluding me.
+						Taking a break."</em> Mood was: frustrated. Tagged
+						<span class="inline-block rounded bg-amber-200/60 px-1.5 py-0.5 font-['JetBrains_Mono'] text-[11px] text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">#recursion</span>
+						<span class="inline-block rounded bg-amber-200/60 px-1.5 py-0.5 font-['JetBrains_Mono'] text-[11px] text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">#debugging</span>.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Reflect -->
+		<div class="chat-panel flex flex-col gap-3 p-5" data-panel="reflect">
+			<div class="chat-msg flex justify-end" style="--delay: 0.3s">
+				<div class="max-w-[80%] rounded-2xl rounded-br-md bg-amber-100 px-4 py-2.5 transition-colors duration-300 dark:bg-amber-900/30">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-amber-900 dark:text-amber-100">
+						Reflect on my learning this month
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-start" style="--delay: 0.8s">
+				<div class="max-w-[85%] rounded-2xl rounded-bl-md border border-amber-200/40 bg-amber-50/50 px-4 py-2.5 transition-colors duration-300 dark:border-amber-900/15 dark:bg-[#1f1b17]">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#6e6150] dark:text-[#c4b8a6]">
+						Your journal tells a clear story: you've shifted from "learning by reading" to "learning by
+						building." Frustration entries decreased by half while breakthrough entries tripled.
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-end" style="--delay: 1.3s">
+				<div class="max-w-[80%] rounded-2xl rounded-br-md bg-amber-100 px-4 py-2.5 transition-colors duration-300 dark:bg-amber-900/30">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-amber-900 dark:text-amber-100">
+						What should I focus on next?
+					</p>
+				</div>
+			</div>
+			<div class="chat-msg flex justify-start" style="--delay: 1.8s">
+				<div class="max-w-[85%] rounded-2xl rounded-bl-md border border-amber-200/40 bg-amber-50/50 px-4 py-2.5 transition-colors duration-300 dark:border-amber-900/15 dark:bg-[#1f1b17]">
+					<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#6e6150] dark:text-[#c4b8a6]">
+						Based on your entries, you keep circling back to system design but haven't gone deep yet.
+						Your most energized entries are about architecture patterns — that might be your next rabbit hole.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	.chat-msg {
+		opacity: 0;
+		transform: translateY(12px);
+		animation: msgAppear 0.5s ease-out forwards;
+		animation-delay: var(--delay);
+	}
+
+	.chat-msg.reset {
+		animation: none;
+		opacity: 0;
+		transform: translateY(12px);
+	}
+
+	.chat-msg.animate {
+		animation: msgAppear 0.5s ease-out forwards;
+		animation-delay: var(--delay);
+	}
+
+	@keyframes msgAppear {
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.chat-tab {
+		color: #b4a48e;
+		border-bottom: 2px solid transparent;
+	}
+
+	:where(.dark, .dark *) .chat-tab {
+		color: #6e6150;
+	}
+
+	.chat-tab.active {
+		color: #d97706;
+		border-bottom-color: #d97706;
+	}
+
+	:where(.dark, .dark *) .chat-tab.active {
+		color: #f59e0b;
+		border-bottom-color: #f59e0b;
+	}
+
+	.chat-tab:hover:not(.active) {
+		color: #92400e;
+	}
+
+	:where(.dark, .dark *) .chat-tab:hover:not(.active) {
+		color: #a89a84;
+	}
+
+	.chat-panel {
+		display: none;
+	}
+
+	.chat-panel.active {
+		display: flex;
+	}
+</style>
+
+<script is:inline>
+	(function () {
+		const tabs = document.querySelectorAll(".chat-tab");
+		const panels = document.querySelectorAll(".chat-panel");
+
+		tabs.forEach(function (tab) {
+			tab.addEventListener("click", function () {
+				const target = tab.getAttribute("data-tab");
+
+				// Update active tab
+				tabs.forEach(function (t) { t.classList.remove("active"); });
+				tab.classList.add("active");
+
+				// Switch panels and re-trigger animation
+				panels.forEach(function (panel) {
+					panel.classList.remove("active");
+					if (panel.getAttribute("data-panel") === target) {
+						panel.classList.add("active");
+						// Re-trigger animations
+						var msgs = panel.querySelectorAll(".chat-msg");
+						msgs.forEach(function (msg) {
+							msg.classList.add("reset");
+							msg.classList.remove("animate");
+							// Force reflow
+							void msg.offsetWidth;
+							msg.classList.remove("reset");
+							msg.classList.add("animate");
+						});
+					}
+				});
+			});
+		});
+	})();
+</script>

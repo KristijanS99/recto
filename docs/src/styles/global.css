@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Starlight theme customization via CSS custom properties */
+/* :root = dark mode defaults. Starlight swaps white/black semantics in light mode. */
+:root {
+  --sl-font: "Source Serif 4", Georgia, serif;
+  --sl-font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Dark mode: white = text (light), black = bg (dark) */
+  --sl-color-white: #faf8f5;
+  --sl-color-black: #0f0d0b;
+
+  --sl-color-accent-low: #451a03;
+  --sl-color-accent: #f59e0b;
+  --sl-color-accent-high: #fef3c7;
+
+  /* Dark mode grays: 1 = lightest (text), 6 = darkest (sidebar/nav) */
+  --sl-color-gray-1: #f0ece5;
+  --sl-color-gray-2: #c4b8a6;
+  --sl-color-gray-3: #8d7e68;
+  --sl-color-gray-4: #534a3d;
+  --sl-color-gray-5: #3a332b;
+  --sl-color-gray-6: #221e19;
+}
+
+/* Light mode: Starlight swaps white/black — black = bg (light!), white = text (dark!) */
+:root[data-theme="light"] {
+  --sl-color-white: #221e19;
+  --sl-color-black: #faf8f5;
+
+  --sl-color-accent-low: #fef3c7;
+  --sl-color-accent: #d97706;
+  --sl-color-accent-high: #451a03;
+
+  /* Light mode grays: 1 = darkest (text), 7 = lightest (nav bg) */
+  --sl-color-gray-1: #221e19;
+  --sl-color-gray-2: #3a332b;
+  --sl-color-gray-3: #534a3d;
+  --sl-color-gray-4: #8d7e68;
+  --sl-color-gray-5: #c4b8a6;
+  --sl-color-gray-6: #f0ece5;
+  --sl-color-gray-7: #faf8f5;
+}
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Lora", "Georgia", serif;
+}
