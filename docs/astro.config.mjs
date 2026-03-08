@@ -11,6 +11,9 @@ export default defineConfig({
       logo: {
         src: './src/assets/logo.png',
       },
+      components: {
+        ThemeProvider: './src/components/ThemeProvider.astro',
+      },
       social: [
         {
           icon: 'github',
