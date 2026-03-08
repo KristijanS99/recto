@@ -1,10 +1,11 @@
 ---
 interface Props {
-	title: string;
-	description: string;
-	icon: string;
+  title: string;
+  description: string;
+  icon: string;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
 const { title, description, icon } = Astro.props;
 ---
 

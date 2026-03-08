@@ -1,49 +1,56 @@
 ---
-import Landing from "../layouts/Landing.astro";
-import ChatDemo from "../components/ChatDemo.astro";
-import FeatureCard from "../components/FeatureCard.astro";
-import ScrollReveal from "../components/ScrollReveal.astro";
-import Footer from "../components/Footer.astro";
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import ChatDemo from '../components/ChatDemo.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import FeatureCard from '../components/FeatureCard.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import Footer from '../components/Footer.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import ScrollReveal from '../components/ScrollReveal.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import Landing from '../layouts/Landing.astro';
 
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
 const features = [
-	{
-		icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>',
-		title: "MCP-Native",
-		description:
-			"Built from the ground up for AI assistants via Model Context Protocol. Journal by talking, not typing into an app.",
-	},
-	{
-		icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>',
-		title: "Hybrid Search",
-		description:
-			"Full-text BM25 + semantic vector search, fused with Reciprocal Rank Fusion. Find entries by meaning, not just keywords.",
-	},
-	{
-		icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 22V9" /></svg>',
-		title: "Self-Hosted",
-		description:
-			"Docker Compose, one command. Your journal data never leaves your machine. Full ownership, zero cloud lock-in.",
-	},
-	{
-		icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2H18a2 2 0 0 1 2 2v2.5" /><path d="M20 15.5V18a2 2 0 0 1-2 2h-2.5" /><path d="M8.5 22H6a2 2 0 0 1-2-2v-2.5" /><path d="M4 8.5V6a2 2 0 0 1 2-2h2.5" /><path d="M14 9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /><path d="M14 14.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /></svg>',
-		title: "AI-Agnostic",
-		description:
-			"Bring your own API key. Works with Anthropic, OpenAI, or local models via Ollama. Switch providers anytime.",
-	},
-	{
-		icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>',
-		title: "Progressive Enhancement",
-		description:
-			"Works with zero AI config — plain text and keyword search. Add API keys to unlock tagging, summaries, and semantic search.",
-	},
-	{
-		icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>',
-		title: "Simple Auth",
-		description:
-			"Single API key for your self-hosted instance. No OAuth flows, no user management. Just set an env var and go.",
-	},
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>',
+    title: 'MCP-Native',
+    description:
+      'Built from the ground up for AI assistants via Model Context Protocol. Journal by talking, not typing into an app.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>',
+    title: 'Hybrid Search',
+    description:
+      'Full-text BM25 + semantic vector search, fused with Reciprocal Rank Fusion. Find entries by meaning, not just keywords.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 22V9" /></svg>',
+    title: 'Self-Hosted',
+    description:
+      'Docker Compose, one command. Your journal data never leaves your machine. Full ownership, zero cloud lock-in.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2H18a2 2 0 0 1 2 2v2.5" /><path d="M20 15.5V18a2 2 0 0 1-2 2h-2.5" /><path d="M8.5 22H6a2 2 0 0 1-2-2v-2.5" /><path d="M4 8.5V6a2 2 0 0 1 2-2h2.5" /><path d="M14 9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /><path d="M14 14.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /></svg>',
+    title: 'AI-Agnostic',
+    description:
+      'Bring your own API key. Works with Anthropic, OpenAI, or local models via Ollama. Switch providers anytime.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>',
+    title: 'Progressive Enhancement',
+    description:
+      'Works with zero AI config — plain text and keyword search. Add API keys to unlock tagging, summaries, and semantic search.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>',
+    title: 'Simple Auth',
+    description:
+      'Single API key for your self-hosted instance. No OAuth flows, no user management. Just set an env var and go.',
+  },
 ];
 ---
 

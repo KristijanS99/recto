@@ -1,13 +1,15 @@
 ---
-import "../styles/global.css";
+import '../styles/global.css';
 
 interface Props {
-	title: string;
-	description: string;
+  title: string;
+  description: string;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
 const { title, description } = Astro.props;
-const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 ---
 
 <!doctype html>
