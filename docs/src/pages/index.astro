@@ -1,0 +1,365 @@
+---
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import ChatDemo from '../components/ChatDemo.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import FeatureCard from '../components/FeatureCard.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import Footer from '../components/Footer.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import ScrollReveal from '../components/ScrollReveal.astro';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import Landing from '../layouts/Landing.astro';
+
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
+const features = [
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>',
+    title: 'MCP-Native',
+    description:
+      'Built from the ground up for AI assistants via Model Context Protocol. Journal by talking, not typing into an app.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>',
+    title: 'Hybrid Search',
+    description:
+      'Full-text BM25 + semantic vector search, fused with Reciprocal Rank Fusion. Find entries by meaning, not just keywords.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 22V9" /></svg>',
+    title: 'Self-Hosted',
+    description:
+      'Docker Compose, one command. Your journal data never leaves your machine. Full ownership, zero cloud lock-in.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2H18a2 2 0 0 1 2 2v2.5" /><path d="M20 15.5V18a2 2 0 0 1-2 2h-2.5" /><path d="M8.5 22H6a2 2 0 0 1-2-2v-2.5" /><path d="M4 8.5V6a2 2 0 0 1 2-2h2.5" /><path d="M14 9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /><path d="M14 14.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" /></svg>',
+    title: 'AI-Agnostic',
+    description:
+      'Bring your own API key. Works with Anthropic, OpenAI, or local models via Ollama. Switch providers anytime.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>',
+    title: 'Progressive Enhancement',
+    description:
+      'Works with zero AI config — plain text and keyword search. Add API keys to unlock tagging, summaries, and semantic search.',
+  },
+  {
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>',
+    title: 'Simple Auth',
+    description:
+      'Single API key for your self-hosted instance. No OAuth flows, no user management. Just set an env var and go.',
+  },
+];
+---
+
+<Landing title="Recto — AI Journal for Developers" description="Open-source, self-hosted journal backend. Store, search, and reflect on your thoughts through any AI assistant via MCP.">
+	<!-- Hero -->
+	<section class="relative overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-32">
+		<!-- Background glow -->
+		<div class="pointer-events-none absolute left-1/2 top-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-amber-200/20 blur-[120px] dark:bg-amber-900/8"></div>
+
+		<div class="relative mx-auto max-w-6xl px-6">
+			<div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+				<!-- Left: Copy -->
+				<div class="hero-slide-left max-w-xl">
+					<!-- Decorative line -->
+					<div class="mb-6 flex items-center gap-3">
+						<div class="h-px w-8 bg-amber-400/50 dark:bg-amber-700/50"></div>
+						<span class="font-['JetBrains_Mono'] text-xs tracking-widest text-amber-600/80 uppercase">
+							Open source journal backend
+						</span>
+					</div>
+
+					<h1 class="font-['Playfair_Display'] text-4xl leading-tight font-bold tracking-tight text-amber-950 sm:text-5xl lg:text-[3.5rem] dark:text-amber-50">
+						Your journal lives where your thoughts already are
+					</h1>
+
+					<p class="mt-6 font-['Source_Serif_4'] text-lg leading-relaxed text-[#6e6150] dark:text-[#a89a84]">
+						Store, search, and reflect on your thoughts through any AI assistant.
+						No app to open. No habit to build. Just conversation.
+					</p>
+
+					<div class="mt-10 flex flex-wrap gap-4">
+						<a
+							href={`${base}getting-started`}
+							class="inline-flex items-center gap-2 rounded-full bg-amber-600 px-6 py-3 font-['Source_Serif_4'] text-sm font-medium text-white transition-all hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-600/20"
+						>
+							Get Started
+							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+							</svg>
+						</a>
+						<a
+							href="https://github.com/KristijanS99/recto"
+							class="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-transparent px-6 py-3 font-['Source_Serif_4'] text-sm font-medium text-amber-800 transition-all hover:border-amber-400/80 hover:bg-amber-50/50 dark:border-amber-800/40 dark:text-amber-200 dark:hover:border-amber-600/60 dark:hover:bg-amber-950/30"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+							</svg>
+							View on GitHub
+						</a>
+					</div>
+				</div>
+
+				<!-- Right: Chat Demo -->
+				<div class="hero-slide-right relative">
+					<!-- Decorative amber glow behind chat -->
+					<div class="pointer-events-none absolute -inset-4 rounded-2xl bg-amber-500/[0.03] blur-2xl"></div>
+					<ChatDemo />
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Divider -->
+	<div class="mx-auto max-w-6xl px-6">
+		<div class="h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent dark:via-amber-900/30"></div>
+	</div>
+
+	<!-- Features -->
+	<section class="py-14 lg:py-20">
+		<div class="mx-auto max-w-6xl px-6">
+			<ScrollReveal>
+				<div class="mb-10 max-w-2xl">
+					<h2 class="font-['Playfair_Display'] text-3xl font-bold text-amber-950 sm:text-4xl dark:text-amber-50">
+						Everything you need, nothing you don't
+					</h2>
+					<p class="mt-4 font-['Source_Serif_4'] text-lg text-[#8d7e68] dark:text-[#a89a84]">
+						A journal backend that respects your data, your tools, and your workflow.
+					</p>
+				</div>
+			</ScrollReveal>
+
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{features.map((f, i) => (
+					<ScrollReveal delay={i * 100}>
+						<FeatureCard title={f.title} description={f.description} icon={f.icon} />
+					</ScrollReveal>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<!-- Divider -->
+	<div class="mx-auto max-w-6xl px-6">
+		<div class="h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent dark:via-amber-900/30"></div>
+	</div>
+
+	<!-- How It Works -->
+	<section class="py-14 lg:py-20">
+		<div class="mx-auto max-w-6xl px-6">
+			<ScrollReveal>
+				<div class="mb-10 max-w-2xl">
+					<h2 class="font-['Playfair_Display'] text-3xl font-bold text-amber-950 sm:text-4xl dark:text-amber-50">
+						Three steps to your journal
+					</h2>
+				</div>
+			</ScrollReveal>
+
+			<div class="grid gap-8 lg:grid-cols-3">
+				<!-- Step 1 -->
+				<ScrollReveal delay={0}>
+					<div class="relative">
+						<div class="mb-4 flex items-center gap-3">
+							<span class="flex h-8 w-8 items-center justify-center rounded-full border border-amber-300/60 font-['JetBrains_Mono'] text-sm text-amber-600 dark:border-amber-800/40 dark:text-amber-500">
+								1
+							</span>
+							<h3 class="font-['Playfair_Display'] text-xl font-semibold text-amber-900 dark:text-amber-100">Deploy</h3>
+						</div>
+						<div class="overflow-hidden rounded-lg border border-amber-200/60 bg-white transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+							<div class="flex items-center gap-2 border-b border-amber-200/40 px-4 py-2 dark:border-amber-900/15">
+								<span class="font-['JetBrains_Mono'] text-[11px] text-amber-400 dark:text-[#6e6150]">terminal</span>
+							</div>
+							<pre class="overflow-x-auto p-4"><code class="font-['JetBrains_Mono'] text-sm text-[#6e6150] dark:text-[#c4b8a6]"><span class="text-amber-600">$</span> git clone recto.git
+<span class="text-amber-600">$</span> cd recto
+<span class="text-amber-600">$</span> docker compose up -d
+<span class="text-amber-400 dark:text-[#6e6150]">✓ Container recto-db      Started</span>
+<span class="text-amber-400 dark:text-[#6e6150]">✓ Container recto-api     Started</span>
+<span class="text-amber-400 dark:text-[#6e6150]">✓ Container recto-web     Started</span></code></pre>
+						</div>
+					</div>
+				</ScrollReveal>
+
+				<!-- Step 2 -->
+				<ScrollReveal delay={100}>
+					<div class="relative">
+						<div class="mb-4 flex items-center gap-3">
+							<span class="flex h-8 w-8 items-center justify-center rounded-full border border-amber-300/60 font-['JetBrains_Mono'] text-sm text-amber-600 dark:border-amber-800/40 dark:text-amber-500">
+								2
+							</span>
+							<h3 class="font-['Playfair_Display'] text-xl font-semibold text-amber-900 dark:text-amber-100">Connect</h3>
+						</div>
+						<div class="overflow-hidden rounded-lg border border-amber-200/60 bg-white transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+							<div class="flex items-center gap-2 border-b border-amber-200/40 px-4 py-2 dark:border-amber-900/15">
+								<span class="font-['JetBrains_Mono'] text-[11px] text-amber-400 dark:text-[#6e6150]">mcp-config.json</span>
+							</div>
+							<pre class="overflow-x-auto p-4"><code class="font-['JetBrains_Mono'] text-sm text-[#6e6150] dark:text-[#c4b8a6]">&#123;
+  <span class="text-amber-700 dark:text-amber-400">"mcpServers"</span>: &#123;
+    <span class="text-amber-700 dark:text-amber-400">"recto"</span>: &#123;
+      <span class="text-amber-700 dark:text-amber-400">"url"</span>: <span class="text-amber-900 dark:text-amber-200">"http://localhost:3001/sse"</span>,
+      <span class="text-amber-700 dark:text-amber-400">"env"</span>: &#123;
+        <span class="text-amber-700 dark:text-amber-400">"RECTO_API_KEY"</span>: <span class="text-amber-900 dark:text-amber-200">"your-key"</span>
+      &#125;
+    &#125;
+  &#125;
+&#125;</code></pre>
+						</div>
+					</div>
+				</ScrollReveal>
+
+				<!-- Step 3 -->
+				<ScrollReveal delay={200}>
+					<div class="relative">
+						<div class="mb-4 flex items-center gap-3">
+							<span class="flex h-8 w-8 items-center justify-center rounded-full border border-amber-300/60 font-['JetBrains_Mono'] text-sm text-amber-600 dark:border-amber-800/40 dark:text-amber-500">
+								3
+							</span>
+							<h3 class="font-['Playfair_Display'] text-xl font-semibold text-amber-900 dark:text-amber-100">Journal</h3>
+						</div>
+						<div class="overflow-hidden rounded-lg border border-amber-200/60 bg-white p-6 transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+							<p class="font-['Source_Serif_4'] text-amber-800 leading-relaxed italic dark:text-[#c4b8a6]">
+								"I want to write about what I learned today..."
+							</p>
+							<p class="mt-4 font-['Source_Serif_4'] text-sm text-amber-500 dark:text-[#6e6150]">
+								That's it. Your AI assistant handles the rest — creating entries, tagging, searching, and reflecting.
+							</p>
+						</div>
+					</div>
+				</ScrollReveal>
+			</div>
+		</div>
+	</section>
+
+	<!-- Divider -->
+	<div class="mx-auto max-w-6xl px-6">
+		<div class="h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent dark:via-amber-900/30"></div>
+	</div>
+
+	<!-- Architecture -->
+	<section class="py-14 lg:py-20">
+		<div class="mx-auto max-w-6xl px-6">
+			<ScrollReveal>
+				<div class="mb-10 max-w-2xl">
+					<h2 class="font-['Playfair_Display'] text-3xl font-bold text-amber-950 sm:text-4xl dark:text-amber-50">
+						Architecture
+					</h2>
+					<p class="mt-4 font-['Source_Serif_4'] text-lg text-[#8d7e68] dark:text-[#a89a84]">
+						A TypeScript monorepo with three focused packages.
+					</p>
+				</div>
+			</ScrollReveal>
+
+			<div class="grid gap-4 lg:grid-cols-3">
+				<!-- API -->
+				<ScrollReveal delay={0}>
+					<div class="rounded-xl border border-amber-200/60 bg-white p-6 transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+						<div class="mb-3 inline-block rounded-md bg-amber-100 px-2.5 py-1 font-['JetBrains_Mono'] text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-500">
+							@recto/api
+						</div>
+						<h3 class="mb-2 font-['Playfair_Display'] text-lg font-semibold text-amber-900 dark:text-amber-100">REST API</h3>
+						<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#8d7e68] dark:text-[#a89a84]">
+							Hono framework, Drizzle ORM, PostgreSQL with pgvector. Handles entries, search, tags, media, AI enrichment, and reflections.
+						</p>
+					</div>
+				</ScrollReveal>
+
+				<!-- MCP -->
+				<ScrollReveal delay={100}>
+					<div class="rounded-xl border border-amber-200/60 bg-white p-6 transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+						<div class="mb-3 inline-block rounded-md bg-amber-100 px-2.5 py-1 font-['JetBrains_Mono'] text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-500">
+							@recto/mcp
+						</div>
+						<h3 class="mb-2 font-['Playfair_Display'] text-lg font-semibold text-amber-900 dark:text-amber-100">MCP Server</h3>
+						<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#8d7e68] dark:text-[#a89a84]">
+							The AI journaling interface. Stdio + HTTP/SSE transports. Tools for creating, searching, reflecting, and managing entries.
+						</p>
+					</div>
+				</ScrollReveal>
+
+				<!-- Web -->
+				<ScrollReveal delay={200}>
+					<div class="rounded-xl border border-amber-200/60 bg-white p-6 transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+						<div class="mb-3 inline-block rounded-md bg-amber-100 px-2.5 py-1 font-['JetBrains_Mono'] text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-500">
+							@recto/web
+						</div>
+						<h3 class="mb-2 font-['Playfair_Display'] text-lg font-semibold text-amber-900 dark:text-amber-100">Web Dashboard</h3>
+						<p class="font-['Source_Serif_4'] text-sm leading-relaxed text-[#8d7e68] dark:text-[#a89a84]">
+							React + Vite + Tailwind CSS. A read-only interface for browsing your timeline, entries, and tags.
+						</p>
+					</div>
+				</ScrollReveal>
+			</div>
+
+			<!-- Connection diagram -->
+			<div class="mt-8 flex items-center justify-center gap-4">
+				<span class="font-['JetBrains_Mono'] text-xs text-amber-400 dark:text-[#6e6150]">AI Assistants</span>
+				<svg class="h-4 w-12 text-amber-300 dark:text-amber-800/50" viewBox="0 0 48 16" fill="none" stroke="currentColor" stroke-width="1.5">
+					<path d="M0 8h44M40 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+				<span class="rounded-md border border-amber-300/60 bg-amber-100/50 px-3 py-1.5 font-['JetBrains_Mono'] text-xs text-amber-700 dark:border-amber-800/30 dark:bg-amber-900/15 dark:text-amber-500">MCP</span>
+				<svg class="h-4 w-12 text-amber-300 dark:text-amber-800/50" viewBox="0 0 48 16" fill="none" stroke="currentColor" stroke-width="1.5">
+					<path d="M0 8h44M40 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+				<span class="rounded-md border border-amber-300/60 bg-amber-100/50 px-3 py-1.5 font-['JetBrains_Mono'] text-xs text-amber-700 dark:border-amber-800/30 dark:bg-amber-900/15 dark:text-amber-500">API</span>
+				<svg class="h-4 w-12 text-amber-300 dark:text-amber-800/50" viewBox="0 0 48 16" fill="none" stroke="currentColor" stroke-width="1.5">
+					<path d="M0 8h44M40 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+				<span class="rounded-md border border-amber-300/60 bg-amber-100/50 px-3 py-1.5 font-['JetBrains_Mono'] text-xs text-amber-700 dark:border-amber-800/30 dark:bg-amber-900/15 dark:text-amber-500">PostgreSQL</span>
+			</div>
+		</div>
+	</section>
+
+	<!-- Divider -->
+	<div class="mx-auto max-w-6xl px-6">
+		<div class="h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent dark:via-amber-900/30"></div>
+	</div>
+
+	<!-- Quick Start -->
+	<section class="py-14 lg:py-20">
+		<ScrollReveal>
+			<div class="mx-auto max-w-3xl px-6 text-center">
+				<h2 class="font-['Playfair_Display'] text-3xl font-bold text-amber-950 sm:text-4xl dark:text-amber-50">
+					Start journaling in under a minute
+				</h2>
+				<p class="mt-4 font-['Source_Serif_4'] text-lg text-[#8d7e68] dark:text-[#a89a84]">
+					Clone, start, connect. Your first journal entry is one conversation away.
+				</p>
+
+				<div class="mt-10 overflow-hidden rounded-xl border border-amber-200/60 bg-white text-left transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#1a1714]">
+					<div class="flex items-center gap-2 border-b border-amber-200/40 px-4 py-3 dark:border-amber-900/15">
+						<div class="flex gap-1.5">
+							<div class="h-2.5 w-2.5 rounded-full bg-amber-200 dark:bg-[#3a332b]"></div>
+							<div class="h-2.5 w-2.5 rounded-full bg-amber-200 dark:bg-[#3a332b]"></div>
+							<div class="h-2.5 w-2.5 rounded-full bg-amber-200 dark:bg-[#3a332b]"></div>
+						</div>
+						<span class="ml-2 font-['JetBrains_Mono'] text-[11px] text-amber-400 dark:text-[#6e6150]">terminal</span>
+					</div>
+					<pre class="overflow-x-auto p-6"><code class="font-['JetBrains_Mono'] text-sm leading-loose text-[#6e6150] dark:text-[#c4b8a6]"><span class="text-amber-600">$</span> git clone https://github.com/KristijanS99/recto.git
+<span class="text-amber-600">$</span> cd recto
+<span class="text-amber-600">$</span> docker compose up -d
+
+<span class="text-amber-400 dark:text-[#6e6150]"># Recto is now running at http://localhost:3000</span>
+<span class="text-amber-400 dark:text-[#6e6150]"># Add the MCP config to your AI assistant and start journaling.</span></code></pre>
+				</div>
+
+				<div class="mt-8">
+					<a
+						href={`${base}getting-started`}
+						class="inline-flex items-center gap-2 rounded-full bg-amber-600 px-6 py-3 font-['Source_Serif_4'] text-sm font-medium text-white transition-all hover:bg-amber-500 hover:shadow-lg hover:shadow-amber-600/20"
+					>
+						Read the full guide
+						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+						</svg>
+					</a>
+				</div>
+			</div>
+		</ScrollReveal>
+	</section>
+
+	<Footer />
+</Landing>

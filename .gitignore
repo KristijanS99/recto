@@ -3,6 +3,7 @@ node_modules
 
 # Build outputs
 dist
+.astro
 .turbo
 *.bundled_*.mjs
 
@@ -27,5 +28,11 @@ postgres_data
 # Test
 coverage
 
+# Worktrees
+.worktrees
+
 # Logs
 *.log
+
+# Playwright screenshots
+landing-*.png

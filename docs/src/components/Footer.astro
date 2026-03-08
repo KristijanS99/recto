@@ -1,0 +1,43 @@
+---
+// biome-ignore lint/correctness/noUnusedVariables: used in Astro template
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+
+<footer class="border-t border-amber-200/60 bg-amber-50/30 transition-colors duration-300 dark:border-amber-900/20 dark:bg-[#0a0908]">
+	<div class="mx-auto max-w-6xl px-6 py-12">
+		<div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+			<div class="flex items-center gap-3">
+				<img src={`${base}logo.png`} alt="Recto" class="h-6 w-6 opacity-60" />
+				<span class="font-['Playfair_Display'] text-sm text-[#a89a84] dark:text-[#6e6150]">recto</span>
+			</div>
+
+			<div class="flex items-center gap-6 text-sm text-[#a89a84] dark:text-[#6e6150]">
+				<a
+					href={`${base}getting-started`}
+					class="transition-colors hover:text-amber-600 dark:hover:text-amber-400"
+				>
+					Docs
+				</a>
+				<a
+					href="https://github.com/KristijanS99/recto"
+					class="transition-colors hover:text-amber-600 dark:hover:text-amber-400"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					GitHub
+				</a>
+				<span class="text-amber-200 dark:text-[#3a332b]">|</span>
+				<span>MIT License</span>
+			</div>
+
+			<p class="text-sm text-[#c4b8a6] dark:text-[#534a3d]">
+				Built by <a
+					href="https://github.com/KristijanS99"
+					class="text-[#a89a84] transition-colors hover:text-amber-600 dark:text-[#6e6150] dark:hover:text-amber-400"
+					target="_blank"
+					rel="noopener noreferrer">@KristijanS99</a
+				>
+			</p>
+		</div>
+	</div>
+</footer>

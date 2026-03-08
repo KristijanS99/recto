@@ -57,7 +57,9 @@
       "!!**/.turbo",
       "!!**/*.min.js",
       "!!**/pnpm-lock.yaml",
-      "!!**/*.bundled_*.mjs"
+      "!!**/*.bundled_*.mjs",
+      "!!**/.astro",
+      "!!**/.worktrees"
     ]
   }
 }
