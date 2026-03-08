@@ -50,6 +50,7 @@ The primary journaling interface isn't a UI. It's your AI assistant (Claude, Cha
 - **Self-hosted** — Docker Compose, one command, your data never leaves your machine
 - **AI-agnostic** — bring your own API key: Anthropic, OpenAI, or local models via Ollama
 - **Progressive enhancement** — works with zero AI config (plain text + keyword search), gets smarter when you add API keys
+- **Customizable prompts** — built-in prompt templates (daily check-in, weekly review, gratitude, etc.) plus custom instructions for MCP behavior
 - **Single API key auth** — simple, no-fuss security for your self-hosted instance
 
 ---
@@ -63,14 +64,60 @@ recto/
 ├── packages/
 │   ├── api/     @recto/api   — Hono REST API, PostgreSQL + pgvector, Drizzle ORM
 │   ├── mcp/     @recto/mcp   — MCP server (stdio + HTTP/SSE), the AI journaling interface
-│   └── web/     @recto/web   — React + Vite dashboard for browsing entries
+│   └── web/     @recto/web   — React + Vite dashboard for browsing and managing entries
 ```
 
 | Package | Role | Stack |
 |---------|------|-------|
 | `@recto/api` | REST API & data layer | Hono, Drizzle ORM, PostgreSQL, pgvector |
 | `@recto/mcp` | AI assistant interface | MCP SDK, stdio + HTTP/SSE transports |
-| `@recto/web` | Read-only web dashboard | React, Vite, Tailwind CSS, TanStack Query |
+| `@recto/web` | Web dashboard | React, Vite, Tailwind CSS, TanStack Query |
+
+## Features
+
+### Journal entries
+Create, update, and delete journal entries. Each entry supports content, title, tags, mood, people mentioned, media attachments, and arbitrary metadata.
+
+### AI enrichment
+When an LLM provider is configured, new entries are automatically enriched with AI-generated titles, tags, mood detection, and people extraction. Embeddings are generated for semantic search when an embedding provider is set.
+
+### Search
+Three search modes:
+- **Keyword** — PostgreSQL full-text search (BM25) with highlighted snippets
+- **Semantic** — vector similarity search via pgvector
+- **Hybrid** — combines both using Reciprocal Rank Fusion (default)
+
+### Reflect
+Ask your AI assistant to reflect on your journal entries over any time period. The reflect endpoint retrieves relevant entries and generates a thoughtful synthesis.
+
+### MCP tools
+The MCP server exposes these tools to your AI assistant:
+
+| Tool | Description |
+|------|-------------|
+| `get_instructions` | Retrieve operating instructions for the journal |
+| `create_entry` | Create a new journal entry |
+| `get_entry` | Retrieve a specific entry |
+| `list_entries` | List entries with optional filters |
+| `search_entries` | Search by keyword, semantic similarity, or hybrid |
+| `reflect` | Generate a reflection based on past entries |
+| `add_tags` | Add tags to an entry |
+| `get_summary` | Get an AI summary of recent entries |
+| `add_media` | Attach a media URL to an entry |
+
+### MCP prompts
+Six built-in prompt templates are discoverable by MCP clients: daily check-in, weekly review, monthly retrospective, gratitude, idea capture, and goal setting. You can also create custom prompts.
+
+### Instructions & prompts management
+Customize how your AI assistant behaves via persistent instructions and prompt templates. Manage them through the REST API or the web dashboard's Settings page.
+
+### Web dashboard
+Five pages for browsing and managing your journal:
+- **Timeline** (`/`) — chronological entry feed with pagination and tag filtering
+- **Entry detail** (`/entry/:id`) — full entry view with metadata
+- **Search** (`/search`) — search with mode selection
+- **Tags** (`/tags`) — tag browser with counts
+- **Settings** (`/settings`) — manage instructions and prompt templates
 
 ---
 

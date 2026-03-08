@@ -51,6 +51,13 @@ Auto-detected dimensions per provider:
 Without an embedding provider, search falls back to BM25 full-text search only. Hybrid search (combining keyword + semantic results) requires embeddings.
 :::
 
+## Web UI
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_RECTO_API_KEY` | API key for the web dashboard (same value as `RECTO_API_KEY`) | *(required for web)* |
+| `VITE_RECTO_API_URL` | API base URL for the web dashboard | `/api` |
+
 ## Example `.env`
 
 ```bash
@@ -64,4 +71,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 # Semantic search (pick one)
 EMBEDDING_PROVIDER=openai
 OPENAI_API_KEY=sk-...
+
+# Web dashboard
+VITE_RECTO_API_KEY=your-secret-key-here
 ```

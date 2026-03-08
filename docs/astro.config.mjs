@@ -29,6 +29,7 @@ export default defineConfig({
             { label: 'Getting Started', slug: 'getting-started' },
             { label: 'Configuration', slug: 'configuration' },
             { label: 'MCP Setup', slug: 'mcp-setup' },
+            { label: 'Instructions & Prompts', slug: 'instructions-and-prompts' },
           ],
         },
       ],

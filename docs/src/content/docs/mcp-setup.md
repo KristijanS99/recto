@@ -12,6 +12,7 @@ Once connected, your AI assistant can use these tools:
 
 | Tool | Description |
 |------|-------------|
+| `get_instructions` | Retrieve operating instructions for the journal |
 | `create_entry` | Create a new journal entry |
 | `get_entry` | Retrieve a specific entry |
 | `list_entries` | List entries with optional filters |
@@ -20,6 +21,21 @@ Once connected, your AI assistant can use these tools:
 | `add_tags` | Add tags to an entry |
 | `get_summary` | Get an AI summary of recent entries |
 | `add_media` | Attach a media URL to an entry |
+
+## Built-in Prompts
+
+MCP clients that support the Prompts API will automatically discover these prompt templates:
+
+| Prompt | Description |
+|--------|-------------|
+| `daily-checkin` | Guided daily journal entry |
+| `weekly-review` | Reflect on the past week |
+| `monthly-retrospective` | Month-end review and goal assessment |
+| `gratitude` | Gratitude-focused reflection |
+| `idea-capture` | Develop and refine an idea |
+| `goal-setting` | Set and break down goals |
+
+You can also create custom prompts via the REST API or the web dashboard's Settings page. See [Instructions & Prompts](/recto/instructions-and-prompts) for details.
 
 ## Claude Desktop
 
