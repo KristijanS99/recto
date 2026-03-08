@@ -1,5 +1,5 @@
 import { MessageSquarePlus, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCreatePrompt, usePrompts } from '../api/queries';
 import { EmptyState } from './EmptyState';
 import { PromptCard } from './PromptCard';
@@ -14,6 +14,13 @@ export function PromptList() {
     null,
   );
 
+  useEffect(() => {
+    if (feedback) {
+      const timer = setTimeout(() => setFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [feedback]);
+
   async function handleCreate(formData: { name?: string; description: string; content: string }) {
     if (!formData.name) return;
     try {
@@ -24,13 +31,11 @@ export function PromptList() {
       });
       setShowCreate(false);
       setFeedback({ type: 'success', message: 'Prompt created.' });
-      setTimeout(() => setFeedback(null), 3000);
     } catch (err) {
       setFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'Failed to create prompt.',
       });
-      setTimeout(() => setFeedback(null), 3000);
     }
   }
 
