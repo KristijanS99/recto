@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Clock, Menu, Search, Tag, X } from 'lucide-react';
+import { Clock, Menu, Search, Settings, Tag, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 
@@ -7,6 +7,10 @@ const NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/', label: 'Timeline', icon: Clock },
   { to: '/search', label: 'Search', icon: Search },
   { to: '/tags', label: 'Tags', icon: Tag },
+];
+
+const BOTTOM_NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Layout() {
@@ -59,6 +63,27 @@ export function Layout() {
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
             const active =
               location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+            return (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setSidebarOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+                  active
+                    ? 'bg-sand-200 dark:bg-sand-700 text-sand-900 dark:text-sand-50 font-medium'
+                    : 'text-sand-600 dark:text-sand-400 hover:bg-sand-200/50 dark:hover:bg-sand-700/50'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <nav className="mt-auto flex flex-col gap-1">
+          {BOTTOM_NAV_ITEMS.map(({ to, label, icon: Icon }) => {
+            const active = location.pathname.startsWith(to);
             return (
               <Link
                 key={to}

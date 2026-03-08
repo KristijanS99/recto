@@ -49,6 +49,26 @@ export interface SearchParams {
   limit?: number;
 }
 
+export interface Instruction {
+  id: string;
+  content: string;
+  updatedAt: string;
+}
+
+export interface Prompt {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PromptsResponse {
+  data: Prompt[];
+}
+
 const API_KEY = import.meta.env.VITE_RECTO_API_KEY as string | undefined;
 const BASE_URL = (import.meta.env.VITE_RECTO_API_URL as string | undefined) ?? '/api';
 
@@ -89,5 +109,46 @@ export const api = {
     if (params.mode) query.set('mode', params.mode);
     if (params.limit) query.set('limit', String(params.limit));
     return request<SearchResponse>(`/search?${query.toString()}`);
+  },
+
+  getInstructions(): Promise<Instruction> {
+    return request<Instruction>('/instructions');
+  },
+
+  updateInstructions(content: string): Promise<Instruction> {
+    return request<Instruction>('/instructions', {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  resetInstructions(): Promise<Instruction> {
+    return request<Instruction>('/instructions/reset', { method: 'POST' });
+  },
+
+  getPrompts(): Promise<PromptsResponse> {
+    return request<PromptsResponse>('/prompts');
+  },
+
+  createPrompt(data: { name: string; description: string; content: string }): Promise<Prompt> {
+    return request<Prompt>('/prompts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updatePrompt(id: string, data: { description?: string; content?: string }): Promise<Prompt> {
+    return request<Prompt>(`/prompts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deletePrompt(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/prompts/${id}`, { method: 'DELETE' });
+  },
+
+  resetPrompt(id: string): Promise<Prompt> {
+    return request<Prompt>(`/prompts/${id}/reset`, { method: 'POST' });
   },
 };

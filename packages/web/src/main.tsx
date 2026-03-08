@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
 import { EntryDetail } from './pages/EntryDetail';
 import { Search } from './pages/Search';
+import { Settings } from './pages/Settings';
 import { Tags } from './pages/Tags';
 import { Timeline } from './pages/Timeline';
 import './index.css';
@@ -23,6 +24,7 @@ if (root) {
               <Route path="entry/:id" element={<EntryDetail />} />
               <Route path="search" element={<Search />} />
               <Route path="tags" element={<Tags />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </BrowserRouter>
