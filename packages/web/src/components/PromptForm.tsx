@@ -25,6 +25,7 @@ export function PromptForm({
   const [content, setContent] = useState(initialContent);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: content drives textarea height recalculation
   useEffect(() => {
     const el = contentRef.current;
     if (el) {
@@ -37,9 +38,7 @@ export function PromptForm({
     ? name.trim().length > 0 && description.trim().length > 0 && content.trim().length > 0
     : description.trim().length > 0 && content.trim().length > 0;
 
-  const isDirty = isNew
-    ? true
-    : description !== initialDescription || content !== initialContent;
+  const isDirty = isNew ? true : description !== initialDescription || content !== initialContent;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,10 +53,10 @@ export function PromptForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 animate-fade-in">
       {isNew && (
-        <div>
-          <label className="block text-xs font-medium text-sand-500 dark:text-sand-400 mb-1">
+        <label className="block">
+          <span className="block text-xs font-medium text-sand-500 dark:text-sand-400 mb-1">
             Name (slug)
-          </label>
+          </span>
           <input
             type="text"
             value={name}
@@ -66,13 +65,13 @@ export function PromptForm({
             className="w-full px-3 py-2 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-900 dark:text-sand-100 text-sm focus:outline-none focus:ring-2 focus:ring-sand-400 dark:focus:ring-sand-500 transition-shadow"
             disabled={isPending}
           />
-        </div>
+        </label>
       )}
 
-      <div>
-        <label className="block text-xs font-medium text-sand-500 dark:text-sand-400 mb-1">
+      <label className="block">
+        <span className="block text-xs font-medium text-sand-500 dark:text-sand-400 mb-1">
           Description
-        </label>
+        </span>
         <input
           type="text"
           value={description}
@@ -81,12 +80,12 @@ export function PromptForm({
           className="w-full px-3 py-2 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-900 dark:text-sand-100 text-sm focus:outline-none focus:ring-2 focus:ring-sand-400 dark:focus:ring-sand-500 transition-shadow"
           disabled={isPending}
         />
-      </div>
+      </label>
 
-      <div>
-        <label className="block text-xs font-medium text-sand-500 dark:text-sand-400 mb-1">
+      <label className="block">
+        <span className="block text-xs font-medium text-sand-500 dark:text-sand-400 mb-1">
           Content
-        </label>
+        </span>
         <textarea
           ref={contentRef}
           value={content}
@@ -95,7 +94,7 @@ export function PromptForm({
           className="w-full min-h-[100px] px-3 py-2 rounded-lg border border-sand-200 dark:border-sand-700 bg-white dark:bg-sand-800 text-sand-900 dark:text-sand-100 text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-sand-400 dark:focus:ring-sand-500 transition-shadow"
           disabled={isPending}
         />
-      </div>
+      </label>
 
       <div className="flex items-center gap-2">
         <button

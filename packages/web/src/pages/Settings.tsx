@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { InstructionsEditor } from '../components/InstructionsEditor';
 import { PromptList } from '../components/PromptList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const TABS = ['Instructions', 'Prompts'] as const;
 type Tab = (typeof TABS)[number];

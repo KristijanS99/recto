@@ -35,8 +35,7 @@ export function PromptList() {
   }
 
   if (isLoading) return <SkeletonList count={3} />;
-  if (isError)
-    return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
+  if (isError) return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
 
   const prompts = data?.data ?? [];
 

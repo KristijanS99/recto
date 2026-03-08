@@ -34,6 +34,7 @@ export function InstructionsEditor() {
     }
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: content drives textarea height recalculation
   useEffect(() => {
     autoResize();
   }, [content]);
@@ -67,8 +68,7 @@ export function InstructionsEditor() {
   }
 
   if (isLoading) return <SkeletonDetail />;
-  if (isError)
-    return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
+  if (isError) return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
 
   return (
     <div className="animate-fade-in">

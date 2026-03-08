@@ -5,8 +5,8 @@ import { BrowserRouter, Route, Routes } from 'react-router';
 import { Layout } from './components/Layout';
 import { EntryDetail } from './pages/EntryDetail';
 import { Search } from './pages/Search';
-import { Tags } from './pages/Tags';
 import { Settings } from './pages/Settings';
+import { Tags } from './pages/Tags';
 import { Timeline } from './pages/Timeline';
 import './index.css';
 

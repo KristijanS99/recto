@@ -114,7 +114,9 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
                 </button>
               ) : (
                 <span className="inline-flex items-center gap-2">
-                  <span className="text-sm text-sand-600 dark:text-sand-400">Delete this prompt?</span>
+                  <span className="text-sm text-sand-600 dark:text-sand-400">
+                    Delete this prompt?
+                  </span>
                   <button
                     type="button"
                     onClick={handleDelete}
