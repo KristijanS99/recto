@@ -21,30 +21,31 @@ function loadConfig() {
 async function main() {
   const config = loadConfig();
   const client = new RectoClient(config);
-  const server = createMcpServer(client);
 
-  const transport = process.env.MCP_TRANSPORT === 'http' ? await startHttp(server) : 'stdio';
+  const transport = process.env.MCP_TRANSPORT === 'http' ? await startHttp(client) : 'stdio';
 
   if (transport === 'stdio') {
+    const server = createMcpServer(client);
     const stdioTransport = new StdioServerTransport();
     await server.connect(stdioTransport);
     console.error('Recto MCP server running on stdio');
   }
 }
 
-async function startHttp(server: ReturnType<typeof createMcpServer>) {
+async function startHttp(client: RectoClient) {
   const { createServer } = await import('node:http');
   const { StreamableHTTPServerTransport } = await import(
     '@modelcontextprotocol/sdk/server/streamableHttp.js'
   );
 
   const port = Number(process.env.MCP_PORT) || 3001;
+  const apiKey = process.env.RECTO_API_KEY;
 
   createServer(async (req, res) => {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, mcp-session-id');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, mcp-session-id, Authorization');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -52,13 +53,39 @@ async function startHttp(server: ReturnType<typeof createMcpServer>) {
       return;
     }
 
-    if (
-      req.url === '/mcp' &&
-      (req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE')
-    ) {
+    // Authenticate Bearer token
+    const auth = req.headers.authorization;
+    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined;
+    if (token !== apiKey) {
+      res.writeHead(401);
+      res.end(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32000, message: 'Unauthorized' },
+          id: null,
+        }),
+      );
+      return;
+    }
+
+    if (req.url === '/mcp' && req.method === 'POST') {
+      const server = createMcpServer(client);
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       await server.connect(transport);
       await transport.handleRequest(req, res);
+      res.on('close', () => {
+        transport.close();
+        server.close();
+      });
+    } else if (req.url === '/mcp' && (req.method === 'GET' || req.method === 'DELETE')) {
+      res.writeHead(405);
+      res.end(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32000, message: 'Method not allowed.' },
+          id: null,
+        }),
+      );
     } else {
       res.writeHead(404);
       res.end('Not found');

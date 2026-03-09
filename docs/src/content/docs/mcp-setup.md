@@ -75,7 +75,7 @@ Add to your Claude Code MCP settings:
 }
 ```
 
-## Cursor
+## Cursor (stdio)
 
 Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or global settings):
 
@@ -94,13 +94,62 @@ Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or glob
 }
 ```
 
-## HTTP/SSE Transport
+## Streamable HTTP Transport
 
-For clients that support HTTP-based MCP, you can connect directly to the API's SSE endpoint instead of using stdio:
+For remote or multi-client setups (e.g. running Recto via Docker), use the Streamable HTTP transport instead of stdio. Start the MCP server with `MCP_TRANSPORT=http`:
 
 ```
-URL: http://localhost:3000/mcp/sse
-Header: Authorization: Bearer your-api-key
+URL: http://localhost:3001/mcp
+```
+
+This is useful when you want a single Recto MCP server shared across multiple AI clients.
+
+### Cursor (HTTP)
+
+```json
+{
+  "mcpServers": {
+    "recto": {
+      "url": "http://localhost:3001/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key"
+      }
+    }
+  }
+}
+```
+
+### Google Antigravity
+
+```json
+{
+  "mcpServers": {
+    "recto": {
+      "serverUrl": "http://localhost:3001/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key",
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}
+```
+
+### Other HTTP-capable clients
+
+Most MCP clients that support Streamable HTTP accept a `url` or `serverUrl` field. The MCP server requires a Bearer token matching your `RECTO_API_KEY`:
+
+```json
+{
+  "mcpServers": {
+    "recto": {
+      "url": "http://localhost:3001/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key"
+      }
+    }
+  }
+}
 ```
 
 ## Verify the Connection
