@@ -2,15 +2,10 @@ import { zValidator } from '@hono/zod-validator';
 import { and, desc, gt, lt, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import {
-  ERROR_CODE,
-  HTTP_STATUS,
-  MAX_CONTEXT_CHARS,
-  MAX_ENTRY_WORDS,
-  REFLECT_DEFAULT_LIMIT,
-} from '../constants.js';
+import { MAX_CONTEXT_CHARS, MAX_ENTRY_WORDS, REFLECT_DEFAULT_LIMIT } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
+import { serviceUnavailable } from '../lib/responses.js';
 import type { LLMProvider } from '../services/llm.js';
 import { NullLLM } from '../services/llm.js';
 
@@ -73,14 +68,9 @@ export function reflectRoutes(db: Database, llmProvider: LLMProvider) {
   app.post('/', zValidator('json', reflectSchema), async (c) => {
     // Check if LLM is available
     if (llmProvider instanceof NullLLM) {
-      return c.json(
-        {
-          error: {
-            code: ERROR_CODE.SERVICE_UNAVAILABLE,
-            message: 'LLM provider not configured. Set LLM_PROVIDER to use reflections.',
-          },
-        },
-        HTTP_STATUS.SERVICE_UNAVAILABLE,
+      return serviceUnavailable(
+        c,
+        'LLM provider not configured. Set LLM_PROVIDER to use reflections.',
       );
     }
 

@@ -1,8 +1,9 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { ERROR_CODE, HTTP_STATUS, SEARCH_DEFAULT_LIMIT } from '../constants.js';
+import { SEARCH_DEFAULT_LIMIT } from '../constants.js';
 import type { Database } from '../db/connection.js';
+import { badRequest } from '../lib/responses.js';
 import type { EmbeddingProvider } from '../services/embedding.js';
 import { search } from '../services/search.js';
 
@@ -25,15 +26,7 @@ export function searchRoutes(db: Database, embeddingProvider: EmbeddingProvider 
 
     // If semantic explicitly requested but no embedding provider, return 400
     if (mode === 'semantic' && !hasEmbedding) {
-      return c.json(
-        {
-          error: {
-            code: ERROR_CODE.BAD_REQUEST,
-            message: 'Semantic search requires an embedding provider to be configured',
-          },
-        },
-        HTTP_STATUS.BAD_REQUEST,
-      );
+      return badRequest(c, 'Semantic search requires an embedding provider to be configured');
     }
 
     const result = await search(db, embeddingProvider, {

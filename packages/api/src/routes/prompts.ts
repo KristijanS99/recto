@@ -1,10 +1,11 @@
 import { zValidator } from '@hono/zod-validator';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { ERROR_CODE, HTTP_STATUS } from '../constants.js';
+import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { prompts } from '../db/schema.js';
 import { DEFAULT_PROMPTS } from '../db/seed.js';
+import { badRequest, internalError, notFound } from '../lib/responses.js';
 import { createPromptSchema, updatePromptSchema } from '../types.js';
 
 export function promptsRoutes(db: Database) {
@@ -19,10 +20,7 @@ export function promptsRoutes(db: Database) {
     const id = c.req.param('id');
     const [row] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!row) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Prompt not found' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Prompt not found');
     }
     return c.json(row);
   });
@@ -41,10 +39,7 @@ export function promptsRoutes(db: Database) {
     const body = c.req.valid('json');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Prompt not found' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Prompt not found');
     }
     const [updated] = await db.update(prompts).set(body).where(eq(prompts.id, id)).returning();
     return c.json(updated);
@@ -54,21 +49,10 @@ export function promptsRoutes(db: Database) {
     const id = c.req.param('id');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Prompt not found' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Prompt not found');
     }
     if (existing.isDefault) {
-      return c.json(
-        {
-          error: {
-            code: ERROR_CODE.BAD_REQUEST,
-            message: 'Cannot delete a default prompt. Use reset instead.',
-          },
-        },
-        HTTP_STATUS.BAD_REQUEST,
-      );
+      return badRequest(c, 'Cannot delete a default prompt. Use reset instead.');
     }
     await db.delete(prompts).where(eq(prompts.id, id));
     return c.json({ message: 'Prompt deleted' });
@@ -78,28 +62,14 @@ export function promptsRoutes(db: Database) {
     const id = c.req.param('id');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Prompt not found' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Prompt not found');
     }
     if (!existing.isDefault) {
-      return c.json(
-        {
-          error: {
-            code: ERROR_CODE.BAD_REQUEST,
-            message: 'Only default prompts can be reset',
-          },
-        },
-        HTTP_STATUS.BAD_REQUEST,
-      );
+      return badRequest(c, 'Only default prompts can be reset');
     }
     const defaultData = DEFAULT_PROMPTS.find((p) => p.name === existing.name);
     if (!defaultData) {
-      return c.json(
-        { error: { code: ERROR_CODE.INTERNAL, message: 'Default data not found' } },
-        HTTP_STATUS.INTERNAL,
-      );
+      return internalError(c, 'Default data not found');
     }
     const [updated] = await db
       .update(prompts)

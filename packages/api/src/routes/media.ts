@@ -1,9 +1,10 @@
 import { zValidator } from '@hono/zod-validator';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import { ERROR_CODE, HTTP_STATUS } from '../constants.js';
+import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries, type MediaItem } from '../db/schema.js';
+import { badRequest, notFound } from '../lib/responses.js';
 import { addMediaSchema } from '../types.js';
 
 export function mediaRoutes(db: Database) {
@@ -16,10 +17,7 @@ export function mediaRoutes(db: Database) {
 
     const [entry] = await db.select().from(entries).where(eq(entries.id, id));
     if (!entry) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Entry not found');
     }
 
     const media = [...(entry.media ?? []), mediaItem as MediaItem];
@@ -35,26 +33,17 @@ export function mediaRoutes(db: Database) {
     const index = Number.parseInt(c.req.param('index'), 10);
 
     if (Number.isNaN(index) || index < 0) {
-      return c.json(
-        { error: { code: ERROR_CODE.BAD_REQUEST, message: 'Invalid media index' } },
-        HTTP_STATUS.BAD_REQUEST,
-      );
+      return badRequest(c, 'Invalid media index');
     }
 
     const [entry] = await db.select().from(entries).where(eq(entries.id, id));
     if (!entry) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Entry not found');
     }
 
     const media = entry.media ?? [];
     if (index >= media.length) {
-      return c.json(
-        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Media index out of range' } },
-        HTTP_STATUS.NOT_FOUND,
-      );
+      return notFound(c, 'Media index out of range');
     }
 
     const updated_media = media.filter((_, i) => i !== index);
