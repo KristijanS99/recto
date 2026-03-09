@@ -9,10 +9,17 @@
 </p>
 
 <p align="center">
+  <a href="https://kristijans99.github.io/recto/"><img src="https://img.shields.io/badge/website-recto-orange.svg" alt="Website" /></a>
   <a href="https://github.com/KristijanS99/recto/actions/workflows/ci.yml"><img src="https://github.com/KristijanS99/recto/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/KristijanS99/recto/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg" alt="Node >= 22" />
   <a href="https://github.com/KristijanS99/recto/pulls"><img src="https://img.shields.io/badge/PRs-welcome-orange.svg" alt="PRs Welcome" /></a>
+</p>
+
+<p align="center">
+  <a href="https://kristijans99.github.io/recto/">
+    <img src="image.png" width="700" alt="Recto — Your journal lives where your thoughts already are. Store, search, and reflect on your thoughts through any AI assistant." />
+  </a>
 </p>
 
 ---
@@ -24,14 +31,6 @@
 > In bookbinding, the **recto** is the right-hand page of an open book — the front page, the one you see first. It's where the story begins.
 >
 > Every journal entry is a new recto: a fresh page, waiting for your thoughts.
-
----
-
-## See it in action
-
-<p align="center">
-  <img src="conversation.png" width="600" alt="A conversation with Claude using Recto — journaling about patience, searching past entries, and reflecting on personal growth. Martius VI, Anno MMXXVI." />
-</p>
 
 ---
 

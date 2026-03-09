@@ -22,9 +22,9 @@ async function main() {
   const config = loadConfig();
   const client = new RectoClient(config);
 
-  if (process.env.MCP_TRANSPORT === 'http') {
-    await startHttp(client);
-  } else {
+  const transport = process.env.MCP_TRANSPORT === 'http' ? await startHttp(client) : 'stdio';
+
+  if (transport === 'stdio') {
     const server = createMcpServer(client);
     const stdioTransport = new StdioServerTransport();
     await server.connect(stdioTransport);
@@ -52,29 +52,45 @@ async function startHttp(baseClient: RectoClient) {
       return;
     }
 
-    if (
-      req.url === '/mcp' &&
-      (req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE')
-    ) {
-      // Require Bearer token for HTTP transport
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.writeHead(401, {
-          'Content-Type': 'application/json',
-          'WWW-Authenticate': 'Bearer',
-        });
-        res.end(JSON.stringify({ error: 'Unauthorized' }));
-        return;
-      }
+    // Require Bearer token for HTTP transport
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.writeHead(401, {
+        'Content-Type': 'application/json',
+        'WWW-Authenticate': 'Bearer',
+      });
+      res.end(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32000, message: 'Unauthorized' },
+          id: null,
+        }),
+      );
+      return;
+    }
 
-      // Forward the client's token to the API
-      const token = authHeader.slice(7);
-      const client = baseClient.withToken(token);
+    // Forward the client's token to the API
+    const token = authHeader.slice(7);
+    const client = baseClient.withToken(token);
+
+    if (req.url === '/mcp' && req.method === 'POST') {
       const server = createMcpServer(client);
-
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       await server.connect(transport);
       await transport.handleRequest(req, res);
+      res.on('close', () => {
+        transport.close();
+        server.close();
+      });
+    } else if (req.url === '/mcp' && (req.method === 'GET' || req.method === 'DELETE')) {
+      res.writeHead(405);
+      res.end(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32000, message: 'Method not allowed.' },
+          id: null,
+        }),
+      );
     } else {
       res.writeHead(404);
       res.end('Not found');
