@@ -93,6 +93,18 @@ export const updatePromptSchema = z.object({
   content: z.string().min(1).optional(),
 });
 
+// --- Raw SQL row types for search queries ---
+export interface KeywordSearchRow {
+  id: string;
+  score: number;
+  headline: string;
+}
+
+export interface SemanticSearchRow {
+  id: string;
+  score: number;
+}
+
 // --- Error response shape ---
 export interface ErrorResponse {
   error: {
