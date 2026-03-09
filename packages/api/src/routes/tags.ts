@@ -1,6 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import { eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
+import { ERROR_CODE, HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
 import { addTagsSchema, removeTagsSchema } from '../types.js';
@@ -38,7 +39,10 @@ export function entryTagsRoutes(db: Database) {
 
     const [entry] = await db.select().from(entries).where(eq(entries.id, id));
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return c.json(
+        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
     const existingTags = entry.tags ?? [];
@@ -60,7 +64,10 @@ export function entryTagsRoutes(db: Database) {
 
     const [entry] = await db.select().from(entries).where(eq(entries.id, id));
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return c.json(
+        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
     const existing = entry.tags ?? [];

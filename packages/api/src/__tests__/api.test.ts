@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
@@ -7,6 +8,9 @@ import { createApp } from '../app.js';
 import type { Config } from '../config.js';
 import * as schema from '../db/schema.js';
 import { entries } from '../db/schema.js';
+
+const require = createRequire(import.meta.url);
+const expectedVersion = (require('../../package.json') as { version: string }).version;
 
 let container: StartedPostgreSqlContainer;
 let client: ReturnType<typeof postgres>;
@@ -110,7 +114,7 @@ describe('system routes', () => {
     const res = await req('/health');
     const body = await json(res);
     expect(body.status).toBe('ok');
-    expect(body.version).toBe('0.1.0');
+    expect(body.version).toBe(expectedVersion);
     expect(typeof body.uptime).toBe('number');
   });
 

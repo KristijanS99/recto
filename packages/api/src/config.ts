@@ -1,13 +1,8 @@
 import { z } from 'zod';
+import { EMBEDDING_DIMENSIONS } from './constants.js';
 
 const embeddingProviderSchema = z.enum(['openai', 'voyageai', 'ollama', 'none']).default('none');
 const llmProviderSchema = z.enum(['anthropic', 'openai', 'none']).default('none');
-
-const EMBEDDING_DIMENSIONS_MAP: Record<string, number> = {
-  openai: 1536,
-  voyageai: 1024,
-  ollama: 768,
-};
 
 const envSchema = z
   .object({
@@ -41,7 +36,9 @@ const envSchema = z
     const embeddingProvider = env.EMBEDDING_PROVIDER;
     const embeddingDimensions =
       env.EMBEDDING_DIMENSIONS ??
-      (embeddingProvider !== 'none' ? EMBEDDING_DIMENSIONS_MAP[embeddingProvider] : undefined);
+      (embeddingProvider !== 'none'
+        ? EMBEDDING_DIMENSIONS[embeddingProvider as keyof typeof EMBEDDING_DIMENSIONS]
+        : undefined);
 
     return {
       ...env,

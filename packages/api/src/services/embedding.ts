@@ -1,4 +1,5 @@
 import type { Config } from '../config.js';
+import { EMBEDDING_DIMENSIONS } from '../constants.js';
 
 export interface EmbeddingProvider {
   embed(text: string): Promise<number[]>;
@@ -10,7 +11,7 @@ export interface EmbeddingProvider {
 // OpenAI — text-embedding-3-small (1536d)
 // ---------------------------------------------------------------------------
 export class OpenAIEmbedding implements EmbeddingProvider {
-  readonly dimensions = 1536;
+  readonly dimensions = EMBEDDING_DIMENSIONS.openai;
 
   constructor(private apiKey: string) {}
 
@@ -46,7 +47,7 @@ export class OpenAIEmbedding implements EmbeddingProvider {
 // VoyageAI — voyage-3.5-lite (1024d)
 // ---------------------------------------------------------------------------
 export class VoyageAIEmbedding implements EmbeddingProvider {
-  readonly dimensions = 1024;
+  readonly dimensions = EMBEDDING_DIMENSIONS.voyageai;
 
   constructor(private apiKey: string) {}
 
@@ -145,7 +146,7 @@ export function createEmbeddingProvider(config: Config): EmbeddingProvider {
       return new OllamaEmbedding(
         config.OLLAMA_URL,
         config.OLLAMA_EMBEDDING_MODEL,
-        config.embeddingDimensions ?? 768,
+        config.embeddingDimensions ?? EMBEDDING_DIMENSIONS.ollama,
       );
     case 'none':
       return new NullEmbedding();

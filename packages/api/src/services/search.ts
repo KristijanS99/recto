@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { RRF_K } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { type Entry, entries } from '../db/schema.js';
 import type { EmbeddingProvider } from './embedding.js';
@@ -27,7 +28,7 @@ interface RankedItem {
 // ---------------------------------------------------------------------------
 // RRF (Reciprocal Rank Fusion)
 // ---------------------------------------------------------------------------
-export function rrf(lists: RankedItem[][], k = 60): Map<string, number> {
+export function rrf(lists: RankedItem[][], k = RRF_K): Map<string, number> {
   const scores = new Map<string, number>();
   for (const list of lists) {
     for (let rank = 0; rank < list.length; rank++) {

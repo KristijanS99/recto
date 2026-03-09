@@ -1,6 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
+import { ERROR_CODE, HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
 import type { EnrichCallback } from '../services/enrichment.js';
@@ -33,7 +34,7 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     // Fire-and-forget enrichment
     if (onEnrich && entry) onEnrich(entry.id);
 
-    return c.json(entry, 201);
+    return c.json(entry, HTTP_STATUS.CREATED);
   });
 
   // GET /entries — List entries with filters and cursor pagination
@@ -45,7 +46,10 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     if (cursor) {
       const parsed = decodeCursor(cursor);
       if (!parsed) {
-        return c.json({ error: { code: 'BAD_REQUEST', message: 'Invalid cursor' } }, 400);
+        return c.json(
+          { error: { code: ERROR_CODE.BAD_REQUEST, message: 'Invalid cursor' } },
+          HTTP_STATUS.BAD_REQUEST,
+        );
       }
       // Keyset pagination: (created_at, id) < (cursor_created_at, cursor_id)
       conditions.push(
@@ -97,7 +101,10 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     const [entry] = await db.select().from(entries).where(eq(entries.id, id));
 
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return c.json(
+        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
     return c.json(entry);
@@ -112,7 +119,10 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     if (Object.keys(body).length === 0) {
       const [existing] = await db.select().from(entries).where(eq(entries.id, id));
       if (!existing) {
-        return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+        return c.json(
+          { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
+          HTTP_STATUS.NOT_FOUND,
+        );
       }
       return c.json(existing);
     }
@@ -120,7 +130,10 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     const [updated] = await db.update(entries).set(body).where(eq(entries.id, id)).returning();
 
     if (!updated) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return c.json(
+        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
     // Re-enrich if content changed
@@ -135,7 +148,10 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     const [deleted] = await db.delete(entries).where(eq(entries.id, id)).returning();
 
     if (!deleted) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return c.json(
+        { error: { code: ERROR_CODE.NOT_FOUND, message: 'Entry not found' } },
+        HTTP_STATUS.NOT_FOUND,
+      );
     }
 
     return c.json({ message: 'Entry deleted' });

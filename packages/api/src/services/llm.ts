@@ -1,4 +1,5 @@
 import type { Config } from '../config.js';
+import { LLM_MAX_TOKENS_ENRICHMENT, LLM_MAX_TOKENS_REFLECT } from '../constants.js';
 
 export interface EnrichmentResult {
   title: string;
@@ -48,7 +49,7 @@ function parseEnrichmentResponse(text: string): EnrichmentResult {
 export class AnthropicLLM implements LLMProvider {
   constructor(private apiKey: string) {}
 
-  private async call(prompt: string, maxTokens = 512): Promise<string> {
+  private async call(prompt: string, maxTokens = LLM_MAX_TOKENS_ENRICHMENT): Promise<string> {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -82,7 +83,7 @@ export class AnthropicLLM implements LLMProvider {
   }
 
   async generate(prompt: string): Promise<string> {
-    return this.call(prompt, 1024);
+    return this.call(prompt, LLM_MAX_TOKENS_REFLECT);
   }
 }
 
@@ -95,7 +96,7 @@ export class OpenAILLM implements LLMProvider {
   private async call(
     userContent: string,
     systemContent?: string,
-    maxTokens = 512,
+    maxTokens = LLM_MAX_TOKENS_ENRICHMENT,
     jsonMode = false,
   ): Promise<string> {
     const messages: Array<{ role: string; content: string }> = [];
@@ -130,12 +131,12 @@ export class OpenAILLM implements LLMProvider {
   }
 
   async enrich(content: string): Promise<EnrichmentResult> {
-    const text = await this.call(content, ENRICHMENT_PROMPT, 512, true);
+    const text = await this.call(content, ENRICHMENT_PROMPT, LLM_MAX_TOKENS_ENRICHMENT, true);
     return parseEnrichmentResponse(text);
   }
 
   async generate(prompt: string): Promise<string> {
-    return this.call(prompt, undefined, 1024);
+    return this.call(prompt, undefined, LLM_MAX_TOKENS_REFLECT);
   }
 }
 
