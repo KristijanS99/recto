@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { TtlCache } from './cache.js';
@@ -10,6 +13,24 @@ import {
   PROMPT_NAMES,
 } from './constants.js';
 import type { JournalEntry } from './types.js';
+
+function findPackageVersion(): string {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 5; i++) {
+    const candidate = join(dir, 'package.json');
+    if (existsSync(candidate)) {
+      const pkg = JSON.parse(readFileSync(candidate, 'utf-8')) as {
+        name?: string;
+        version?: string;
+      };
+      if (pkg.name === '@recto/mcp') return pkg.version ?? '0.0.0';
+    }
+    dir = dirname(dir);
+  }
+  return '0.0.0';
+}
+
+const pkgVersion = findPackageVersion();
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(DATE_LOCALE, {
@@ -39,7 +60,7 @@ function textResponse(text: string) {
 export function createMcpServer(client: RectoClient, instructions: string): McpServer {
   const promptsCache = new TtlCache(() => client.getPrompts());
 
-  const server = new McpServer({ name: MCP_SERVER_NAME, version: '0.1.0' }, { instructions });
+  const server = new McpServer({ name: MCP_SERVER_NAME, version: pkgVersion }, { instructions });
 
   // --- MCP Prompts ---
   for (const name of PROMPT_NAMES) {
