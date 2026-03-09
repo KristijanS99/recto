@@ -3,6 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
+import { findEntryById } from '../lib/db-helpers.js';
 import { notFound } from '../lib/responses.js';
 import { addTagsSchema, removeTagsSchema } from '../types.js';
 
@@ -37,7 +38,7 @@ export function entryTagsRoutes(db: Database) {
     const id = c.req.param('id');
     const { tags } = c.req.valid('json');
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
       return notFound(c, 'Entry not found');
     }
@@ -59,7 +60,7 @@ export function entryTagsRoutes(db: Database) {
     const id = c.req.param('id');
     const { tags } = c.req.valid('json');
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
       return notFound(c, 'Entry not found');
     }

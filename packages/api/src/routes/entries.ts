@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
+import { findEntryById } from '../lib/db-helpers.js';
 import { badRequest, notFound } from '../lib/responses.js';
 import type { EnrichCallback } from '../services/enrichment.js';
 import {
@@ -96,7 +97,7 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // GET /entries/:id — Get single entry
   app.get('/:id', async (c) => {
     const id = c.req.param('id');
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
 
     if (!entry) {
       return notFound(c, 'Entry not found');
@@ -112,7 +113,7 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
 
     // If no fields to update, return the existing entry as-is
     if (Object.keys(body).length === 0) {
-      const [existing] = await db.select().from(entries).where(eq(entries.id, id));
+      const existing = await findEntryById(db, id);
       if (!existing) {
         return notFound(c, 'Entry not found');
       }

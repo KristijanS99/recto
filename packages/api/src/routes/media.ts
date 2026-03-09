@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries, type MediaItem } from '../db/schema.js';
+import { findEntryById } from '../lib/db-helpers.js';
 import { badRequest, notFound } from '../lib/responses.js';
 import { addMediaSchema } from '../types.js';
 
@@ -15,7 +16,7 @@ export function mediaRoutes(db: Database) {
     const id = c.req.param('id');
     const mediaItem = c.req.valid('json');
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
       return notFound(c, 'Entry not found');
     }
@@ -36,7 +37,7 @@ export function mediaRoutes(db: Database) {
       return badRequest(c, 'Invalid media index');
     }
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
       return notFound(c, 'Entry not found');
     }
