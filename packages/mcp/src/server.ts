@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { TtlCache } from './cache.js';
 import type { RectoClient } from './client.js';
+import type { JournalEntry } from './types.js';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -11,18 +12,12 @@ function formatDate(iso: string): string {
   });
 }
 
-function formatEntry(entry: Record<string, unknown>): string {
-  const date = formatDate(entry.created_at as string);
+function formatEntry(entry: JournalEntry): string {
+  const date = formatDate(entry.created_at);
   const title = entry.title ? `${entry.title}` : 'Untitled';
-  const tags =
-    Array.isArray(entry.tags) && entry.tags.length > 0 ? ` [${entry.tags.join(', ')}]` : '';
+  const tags = entry.tags && entry.tags.length > 0 ? ` [${entry.tags.join(', ')}]` : '';
   const mood = entry.mood ? ` — mood: ${entry.mood}` : '';
-  const snippet =
-    typeof entry.content === 'string'
-      ? entry.content.length > 200
-        ? `${entry.content.slice(0, 200)}…`
-        : entry.content
-      : '';
+  const snippet = entry.content.length > 200 ? `${entry.content.slice(0, 200)}…` : entry.content;
 
   return `**${title}** (${date})${tags}${mood}\n${snippet}`;
 }
@@ -233,7 +228,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
     },
     async ({ id, tags }) => {
       const entry = await client.addTags(id, tags);
-      const allTags = Array.isArray(entry.tags) ? entry.tags.join(', ') : 'none';
+      const allTags = entry.tags ? entry.tags.join(', ') : 'none';
       return {
         content: [{ type: 'text' as const, text: `Tags updated. Entry now has tags: ${allTags}` }],
       };
