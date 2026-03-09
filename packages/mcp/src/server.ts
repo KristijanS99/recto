@@ -43,7 +43,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
   ];
 
   for (const name of promptNames) {
-    server.prompt(name, `Journaling prompt: ${name}`, async () => {
+    server.registerPrompt(name, { description: `Journaling prompt: ${name}` }, async () => {
       const { data } = await promptsCache.get();
       const prompt = data.find((p) => p.name === name);
       const text = prompt?.content ?? `Prompt "${name}" not found.`;
