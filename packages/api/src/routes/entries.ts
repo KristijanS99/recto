@@ -13,6 +13,7 @@ import {
   encodeCursor,
   entryFiltersSchema,
   updateEntrySchema,
+  uuidParam,
 } from '../types.js';
 
 export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
@@ -97,6 +98,8 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // GET /entries/:id — Get single entry
   app.get('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const entry = await findEntryById(db, id);
 
     if (!entry) {
@@ -109,6 +112,8 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // PATCH /entries/:id — Update entry
   app.patch('/:id', zValidator('json', updateEntrySchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const body = c.req.valid('json');
 
     // If no fields to update, return the existing entry as-is
@@ -135,6 +140,8 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // DELETE /entries/:id — Delete entry
   app.delete('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [deleted] = await db.delete(entries).where(eq(entries.id, id)).returning();
 
     if (!deleted) {

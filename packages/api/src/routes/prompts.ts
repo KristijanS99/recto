@@ -6,7 +6,7 @@ import type { Database } from '../db/connection.js';
 import { prompts } from '../db/schema.js';
 import { DEFAULT_PROMPTS } from '../db/seed.js';
 import { badRequest, internalError, notFound } from '../lib/responses.js';
-import { createPromptSchema, updatePromptSchema } from '../types.js';
+import { createPromptSchema, updatePromptSchema, uuidParam } from '../types.js';
 
 export function promptsRoutes(db: Database) {
   const app = new Hono();
@@ -18,6 +18,8 @@ export function promptsRoutes(db: Database) {
 
   app.get('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [row] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!row) {
       return notFound(c, 'Prompt not found');
@@ -36,6 +38,8 @@ export function promptsRoutes(db: Database) {
 
   app.put('/:id', zValidator('json', updatePromptSchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const body = c.req.valid('json');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
@@ -47,6 +51,8 @@ export function promptsRoutes(db: Database) {
 
   app.delete('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
       return notFound(c, 'Prompt not found');
@@ -60,6 +66,8 @@ export function promptsRoutes(db: Database) {
 
   app.post('/:id/reset', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
       return notFound(c, 'Prompt not found');

@@ -6,7 +6,7 @@ import type { Database } from '../db/connection.js';
 import { entries, type MediaItem } from '../db/schema.js';
 import { findEntryById } from '../lib/db-helpers.js';
 import { badRequest, notFound } from '../lib/responses.js';
-import { addMediaSchema } from '../types.js';
+import { addMediaSchema, uuidParam } from '../types.js';
 
 export function mediaRoutes(db: Database) {
   const app = new Hono();
@@ -14,6 +14,8 @@ export function mediaRoutes(db: Database) {
   // POST /entries/:id/media — Add media reference
   app.post('/:id/media', zValidator('json', addMediaSchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const mediaItem = c.req.valid('json');
 
     const entry = await findEntryById(db, id);
@@ -31,6 +33,8 @@ export function mediaRoutes(db: Database) {
   // DELETE /entries/:id/media/:index — Remove media by index
   app.delete('/:id/media/:index', async (c) => {
     const id = c.req.param('id');
+    const parsedId = uuidParam.safeParse(id);
+    if (!parsedId.success) return badRequest(c, 'Invalid ID format');
     const index = Number.parseInt(c.req.param('index'), 10);
 
     if (Number.isNaN(index) || index < 0) {

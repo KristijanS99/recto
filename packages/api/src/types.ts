@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { DEFAULT_PAGE_LIMIT } from './constants.js';
 
+// --- UUID param validation ---
+export const uuidParam = z.string().uuid('Invalid UUID format');
+
 // --- Media ---
 export const mediaItemSchema = z.object({
   type: z.enum(['image', 'audio', 'video', 'link']),
