@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Entry attachments",
+    "type": "feature",
+    "status": "planned",
+    "category": "api",
+    "description": "Support file uploads to local storage instead of URL references only.",
+    "date": "2026-03-08"
+  },
+  {
+    "title": "Documentation & QA revisit",
+    "type": "improvement",
+    "status": "planned",
+    "category": "web",
+    "description": "Revisit all documentation for accuracy and perform manual QA across the system.",
+    "date": "2026-03-08"
+  },
+  {
+    "title": "Multi-user support",
+    "type": "feature",
+    "status": "planned",
+    "category": "api",
+    "description": "Support multiple users with separate journal spaces and per-user API keys.",
+    "date": "2026-03-08"
+  },
+  {
+    "title": "OAuth support",
+    "type": "feature",
+    "status": "planned",
+    "category": "mcp",
+    "description": "Replace single API key auth with OAuth 2.1 for the HTTP/SSE MCP transport layer.",
+    "date": "2026-03-08"
+  },
+  {
+    "title": "Code refactor & stability",
+    "type": "improvement",
+    "status": "planned",
+    "category": "root",
+    "description": "General refactor across all packages for better code quality, consistency, and stability.",
+    "date": "2026-03-08"
+  },
+  {
+    "title": "Structured logging",
+    "type": "improvement",
+    "status": "planned",
+    "category": "root",
+    "description": "Add structured logging with configurable log levels across the entire system.",
+    "date": "2026-03-08"
+  }
+]
