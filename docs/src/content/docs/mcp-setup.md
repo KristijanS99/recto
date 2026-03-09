@@ -106,4 +106,4 @@ After configuring, test by asking your AI assistant:
 
 > "Create a journal entry about setting up Recto for the first time."
 
-If the entry is created successfully, you're all set. Check the web dashboard at [http://localhost:8080](http://localhost:8080) to see it.
+If the entry is created successfully, you're all set. Check the web dashboard at [http://localhost:5173](http://localhost:5173) to see it.

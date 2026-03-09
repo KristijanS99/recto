@@ -18,16 +18,20 @@ Clone the repository and start all services:
 ```bash
 git clone https://github.com/KristijanS99/recto.git
 cd recto
+cp .env.example .env
+# Edit .env — at minimum set RECTO_API_KEY and VITE_RECTO_API_KEY
 docker compose up -d
 ```
 
-This starts three containers:
+This starts five containers:
 
 | Container | Purpose | Port |
 |-----------|---------|------|
 | `recto-db` | PostgreSQL + pgvector | 5432 |
 | `recto-api` | REST API | 3000 |
-| `recto-web` | Web dashboard | 8080 |
+| `recto-mcp` | MCP server (AI assistant interface) | 3001 |
+| `recto-web` | Web dashboard | 5173 |
+| `recto-proxy` | Caddy reverse proxy | 80 / 443 |
 
 ## Verify It Works
 
@@ -37,7 +41,7 @@ Check the health endpoint:
 curl http://localhost:3000/health
 ```
 
-You should see `{"status":"ok"}`. Open [http://localhost:8080](http://localhost:8080) to see the web dashboard.
+You should see `{"status":"ok"}`. Open [http://localhost:5173](http://localhost:5173) to access the web dashboard directly, or [http://localhost](http://localhost) via the Caddy reverse proxy.
 
 ## Next Steps
 

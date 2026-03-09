@@ -10,7 +10,7 @@
   {
     "title": "Documentation & QA revisit",
     "type": "improvement",
-    "status": "planned",
+    "status": "in-progress",
     "category": "web",
     "description": "Revisit all documentation for accuracy and perform manual QA across the system.",
     "date": "2026-03-08"
@@ -26,9 +26,9 @@
   {
     "title": "OAuth support",
     "type": "feature",
-    "status": "planned",
+    "status": "done",
     "category": "mcp",
-    "description": "Replace single API key auth with OAuth 2.1 for the HTTP/SSE MCP transport layer.",
+    "description": "OAuth 2.1 with PKCE for MCP HTTP transport. Includes authorization server metadata (RFC 8414), dynamic client registration (RFC 7591), token refresh, and automatic cleanup.",
     "date": "2026-03-08"
   },
   {

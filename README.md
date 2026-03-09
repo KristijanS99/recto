@@ -50,7 +50,7 @@ The primary journaling interface isn't a UI. It's your AI assistant (Claude, Cha
 - **AI-agnostic** — bring your own API key: Anthropic, OpenAI, or local models via Ollama
 - **Progressive enhancement** — works with zero AI config (plain text + keyword search), gets smarter when you add API keys
 - **Customizable prompts** — built-in prompt templates (daily check-in, weekly review, gratitude, etc.) plus custom instructions for MCP behavior
-- **Single API key auth** — simple, no-fuss security for your self-hosted instance
+- **Flexible auth** — single API key for quick setup, or OAuth 2.1 with PKCE for MCP HTTP transport
 
 ---
 
@@ -127,29 +127,43 @@ Five pages for browsing and managing your journal:
 git clone https://github.com/KristijanS99/recto.git
 cd recto
 
+# Configure environment
+cp .env.example .env
+# Edit .env with your API key and optional AI provider keys
+
 # Start everything with Docker
 docker compose up -d
 
-# That's it. Recto is running at http://localhost:3000
+# Recto is now running:
+#   API:           http://localhost:3000
+#   MCP server:    http://localhost:3001/mcp
+#   Web dashboard: http://localhost:5173
+#   Reverse proxy: http://localhost (port 80, via Caddy)
 ```
 
 ### Connect your AI assistant
 
-Add Recto as an MCP server in your assistant's config:
+Add Recto as an MCP server in your assistant's config.
+
+**Claude Desktop** (`claude_desktop_config.json`):
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "command": "npx",
-      "args": ["@recto/mcp"],
-      "env": {
-        "RECTO_API_URL": "http://localhost:3000",
-        "RECTO_API_KEY": "your-api-key"
+      "url": "http://localhost:3001/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key"
       }
     }
   }
 }
+```
+
+**Claude Code CLI:**
+
+```bash
+claude mcp add recto --transport http http://localhost:3001/mcp
 ```
 
 Then just start journaling by talking to your AI. It's that simple.
