@@ -2,10 +2,17 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { TtlCache } from './cache.js';
 import type { RectoClient } from './client.js';
+import {
+  DATE_LOCALE,
+  DEFAULT_LIST_LIMIT,
+  ENTRY_SNIPPET_LENGTH,
+  MCP_SERVER_NAME,
+  PROMPT_NAMES,
+} from './constants.js';
 import type { JournalEntry } from './types.js';
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+  return new Date(iso).toLocaleDateString(DATE_LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -17,27 +24,25 @@ function formatEntry(entry: JournalEntry): string {
   const title = entry.title ? `${entry.title}` : 'Untitled';
   const tags = entry.tags && entry.tags.length > 0 ? ` [${entry.tags.join(', ')}]` : '';
   const mood = entry.mood ? ` — mood: ${entry.mood}` : '';
-  const snippet = entry.content.length > 200 ? `${entry.content.slice(0, 200)}…` : entry.content;
+  const snippet =
+    entry.content.length > ENTRY_SNIPPET_LENGTH
+      ? `${entry.content.slice(0, ENTRY_SNIPPET_LENGTH)}…`
+      : entry.content;
 
   return `**${title}** (${date})${tags}${mood}\n${snippet}`;
+}
+
+function textResponse(text: string) {
+  return { content: [{ type: 'text' as const, text }] };
 }
 
 export function createMcpServer(client: RectoClient, instructions: string): McpServer {
   const promptsCache = new TtlCache(() => client.getPrompts());
 
-  const server = new McpServer({ name: 'recto', version: '0.1.0' }, { instructions });
+  const server = new McpServer({ name: MCP_SERVER_NAME, version: '0.1.0' }, { instructions });
 
   // --- MCP Prompts ---
-  const promptNames = [
-    'daily-checkin',
-    'weekly-review',
-    'monthly-retrospective',
-    'gratitude',
-    'idea-capture',
-    'goal-setting',
-  ];
-
-  for (const name of promptNames) {
+  for (const name of PROMPT_NAMES) {
     server.registerPrompt(name, { description: `Journaling prompt: ${name}` }, async () => {
       const { data } = await promptsCache.get();
       const prompt = data.find((p) => p.name === name);
@@ -69,14 +74,9 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
     },
     async (args) => {
       const entry = await client.createEntry(args);
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Journal entry created (ID: ${entry.id}).\n\n${formatEntry(entry)}\n\nAI enrichment will add title, tags, mood, and people in the background if configured.`,
-          },
-        ],
-      };
+      return textResponse(
+        `Journal entry created (ID: ${entry.id}).\n\n${formatEntry(entry)}\n\nAI enrichment will add title, tags, mood, and people in the background if configured.`,
+      );
     },
   );
 
@@ -92,14 +92,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
     },
     async ({ id }) => {
       const entry = await client.getEntry(id);
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: formatEntry(entry),
-          },
-        ],
-      };
+      return textResponse(formatEntry(entry));
     },
   );
 
@@ -119,7 +112,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
     },
     async (args) => {
       const result = await client.listEntries({
-        limit: args.limit ?? 10,
+        limit: args.limit ?? DEFAULT_LIST_LIMIT,
         tag: args.tag,
         from: args.from,
         to: args.to,
@@ -127,13 +120,13 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       });
 
       if (result.data.length === 0) {
-        return { content: [{ type: 'text' as const, text: 'No entries found.' }] };
+        return textResponse('No entries found.');
       }
 
       const formatted = result.data.map((e) => formatEntry(e)).join('\n\n---\n\n');
       const footer = result.has_more ? '\n\n_(More entries available)_' : '';
 
-      return { content: [{ type: 'text' as const, text: `${formatted}${footer}` }] };
+      return textResponse(`${formatted}${footer}`);
     },
   );
 
@@ -156,11 +149,11 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       const result = await client.search({
         q: args.query,
         mode: args.mode,
-        limit: args.limit ?? 10,
+        limit: args.limit ?? DEFAULT_LIST_LIMIT,
       });
 
       if (result.results.length === 0) {
-        return { content: [{ type: 'text' as const, text: 'No matching entries found.' }] };
+        return textResponse('No matching entries found.');
       }
 
       const formatted = result.results
@@ -172,14 +165,9 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
         })
         .join('\n\n---\n\n');
 
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Found ${result.total} results (mode: ${result.mode_used}):\n\n${formatted}`,
-          },
-        ],
-      };
+      return textResponse(
+        `Found ${result.total} results (mode: ${result.mode_used}):\n\n${formatted}`,
+      );
     },
   );
 
@@ -209,9 +197,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
           ? `\n\n_Based on ${result.entries_used.length} entries from ${formatDate(result.period.from)} to ${formatDate(result.period.to)}_`
           : '';
 
-      return {
-        content: [{ type: 'text' as const, text: `${result.reflection}${entriesInfo}` }],
-      };
+      return textResponse(`${result.reflection}${entriesInfo}`);
     },
   );
 
@@ -229,9 +215,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
     async ({ id, tags }) => {
       const entry = await client.addTags(id, tags);
       const allTags = entry.tags ? entry.tags.join(', ') : 'none';
-      return {
-        content: [{ type: 'text' as const, text: `Tags updated. Entry now has tags: ${allTags}` }],
-      };
+      return textResponse(`Tags updated. Entry now has tags: ${allTags}`);
     },
   );
 
@@ -262,14 +246,9 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
         to_date: args.to,
       });
 
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `**Summary (${formatDate(args.from)} — ${formatDate(args.to)})**\n\n${result.reflection}`,
-          },
-        ],
-      };
+      return textResponse(
+        `**Summary (${formatDate(args.from)} — ${formatDate(args.to)})**\n\n${result.reflection}`,
+      );
     },
   );
 
@@ -292,14 +271,7 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
         url: args.url,
         caption: args.caption,
       });
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Media attached to entry ${args.entry_id}: ${args.type} — ${args.url}`,
-          },
-        ],
-      };
+      return textResponse(`Media attached to entry ${args.entry_id}: ${args.type} — ${args.url}`);
     },
   );
 
