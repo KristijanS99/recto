@@ -1,5 +1,8 @@
 import type { Config } from '../config.js';
 import { EMBEDDING_DIMENSIONS } from '../constants.js';
+import { createLogger } from '../lib/logger.js';
+
+const logger = createLogger('embedding');
 
 export interface EmbeddingProvider {
   embed(text: string): Promise<number[]>;
@@ -21,25 +24,35 @@ export class OpenAIEmbedding implements EmbeddingProvider {
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
-    const res = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model: 'text-embedding-3-small', input: texts }),
-    });
+    try {
+      const res = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: 'text-embedding-3-small', input: texts }),
+      });
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`OpenAI embedding failed (${res.status}): ${body}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => 'unknown');
+        throw new Error(`OpenAI embedding API error (${res.status}): ${body}`);
+      }
+
+      const json = (await res.json().catch(() => {
+        throw new Error('OpenAI embedding API returned invalid JSON');
+      })) as {
+        data: Array<{ embedding: number[]; index: number }>;
+      };
+
+      return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('OpenAI embedding')) throw error;
+      logger.error('OpenAI embedding failed', { error: String(error) });
+      throw new Error(
+        `OpenAI embedding failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
-
-    const json = (await res.json()) as {
-      data: Array<{ embedding: number[]; index: number }>;
-    };
-
-    return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
   }
 }
 
@@ -57,25 +70,35 @@ export class VoyageAIEmbedding implements EmbeddingProvider {
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
-    const res = await fetch('https://api.voyageai.com/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model: 'voyage-3.5-lite', input: texts }),
-    });
+    try {
+      const res = await fetch('https://api.voyageai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: 'voyage-3.5-lite', input: texts }),
+      });
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`VoyageAI embedding failed (${res.status}): ${body}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => 'unknown');
+        throw new Error(`VoyageAI embedding API error (${res.status}): ${body}`);
+      }
+
+      const json = (await res.json().catch(() => {
+        throw new Error('VoyageAI embedding API returned invalid JSON');
+      })) as {
+        data: Array<{ embedding: number[]; index: number }>;
+      };
+
+      return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('VoyageAI embedding')) throw error;
+      logger.error('VoyageAI embedding failed', { error: String(error) });
+      throw new Error(
+        `VoyageAI embedding failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
-
-    const json = (await res.json()) as {
-      data: Array<{ embedding: number[]; index: number }>;
-    };
-
-    return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
   }
 }
 
@@ -94,19 +117,29 @@ export class OllamaEmbedding implements EmbeddingProvider {
   }
 
   async embed(text: string): Promise<number[]> {
-    const res = await fetch(`${this.baseUrl}/api/embed`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: this.model, input: text }),
-    });
+    try {
+      const res = await fetch(`${this.baseUrl}/api/embed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: this.model, input: text }),
+      });
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Ollama embedding failed (${res.status}): ${body}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => 'unknown');
+        throw new Error(`Ollama embedding API error (${res.status}): ${body}`);
+      }
+
+      const json = (await res.json().catch(() => {
+        throw new Error('Ollama embedding API returned invalid JSON');
+      })) as { embeddings: number[][] };
+      return json.embeddings[0] ?? [];
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Ollama embedding')) throw error;
+      logger.error('Ollama embedding failed', { error: String(error) });
+      throw new Error(
+        `Ollama embedding failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
-
-    const json = (await res.json()) as { embeddings: number[][] };
-    return json.embeddings[0] ?? [];
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
