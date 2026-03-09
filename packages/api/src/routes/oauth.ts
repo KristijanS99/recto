@@ -1,9 +1,16 @@
 import { zValidator } from '@hono/zod-validator';
+import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Database } from '../db/connection.js';
-import { oauthClients } from '../db/schema.js';
-import { generateClientId, generateClientSecret, hashToken } from '../services/oauth.js';
+import { authorizationCodes, oauthClients } from '../db/schema.js';
+import {
+  generateClientId,
+  generateClientSecret,
+  generateRandomToken,
+  hashToken,
+} from '../services/oauth.js';
+import { renderAuthorizePage } from '../templates/authorize.js';
 
 export interface OAuthRoutesConfig {
   issuerUrl: string;
@@ -91,6 +98,130 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
     }
 
     return c.json(response, 201);
+  });
+
+  // --------------------------------------------------------------------------
+  // GET /authorize — Render consent screen
+  // --------------------------------------------------------------------------
+  app.get('/authorize', async (c) => {
+    if (!config.db) {
+      return c.json({ error: 'Authorization not available' }, 500);
+    }
+
+    const responseType = c.req.query('response_type');
+    const clientId = c.req.query('client_id');
+    const redirectUri = c.req.query('redirect_uri');
+    const state = c.req.query('state');
+    const codeChallenge = c.req.query('code_challenge');
+    const codeChallengeMethod = c.req.query('code_challenge_method');
+
+    if (
+      !responseType ||
+      !clientId ||
+      !redirectUri ||
+      !state ||
+      !codeChallenge ||
+      !codeChallengeMethod
+    ) {
+      return c.json({ error: 'Missing required parameters' }, 400);
+    }
+
+    if (responseType !== 'code') {
+      return c.json({ error: 'Unsupported response_type' }, 400);
+    }
+
+    const [client] = await config.db
+      .select()
+      .from(oauthClients)
+      .where(eq(oauthClients.clientId, clientId))
+      .limit(1);
+
+    if (!client) {
+      return c.json({ error: 'Unknown client_id' }, 400);
+    }
+
+    if (!client.redirectUris.includes(redirectUri)) {
+      return c.json({ error: 'Invalid redirect_uri' }, 400);
+    }
+
+    const html = renderAuthorizePage({
+      clientName: client.clientName,
+      clientId,
+      redirectUri,
+      state,
+      codeChallenge,
+      codeChallengeMethod,
+    });
+
+    return c.html(html);
+  });
+
+  // --------------------------------------------------------------------------
+  // POST /authorize — Validate API key and issue authorization code
+  // --------------------------------------------------------------------------
+  app.post('/authorize', async (c) => {
+    if (!config.db) {
+      return c.json({ error: 'Authorization not available' }, 500);
+    }
+
+    const body = await c.req.parseBody();
+    const clientId = body.client_id as string | undefined;
+    const redirectUri = body.redirect_uri as string | undefined;
+    const state = body.state as string | undefined;
+    const codeChallenge = body.code_challenge as string | undefined;
+    const codeChallengeMethod = body.code_challenge_method as string | undefined;
+    const apiKey = body.api_key as string | undefined;
+
+    if (!clientId || !redirectUri || !state || !codeChallenge || !codeChallengeMethod) {
+      return c.json({ error: 'Missing required parameters' }, 400);
+    }
+
+    const [client] = await config.db
+      .select()
+      .from(oauthClients)
+      .where(eq(oauthClients.clientId, clientId))
+      .limit(1);
+
+    if (!client) {
+      return c.json({ error: 'Unknown client_id' }, 400);
+    }
+
+    if (!client.redirectUris.includes(redirectUri)) {
+      return c.json({ error: 'Invalid redirect_uri' }, 400);
+    }
+
+    if (!apiKey || apiKey !== config.apiKey) {
+      const html = renderAuthorizePage({
+        clientName: client.clientName,
+        clientId,
+        redirectUri,
+        state,
+        codeChallenge,
+        codeChallengeMethod,
+        error: 'Invalid API key',
+      });
+      return c.html(html);
+    }
+
+    // Generate authorization code with 10-minute expiry
+    const code = generateRandomToken();
+    const hashedCode = hashToken(code);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await config.db.insert(authorizationCodes).values({
+      code: hashedCode,
+      clientId,
+      redirectUri,
+      codeChallenge,
+      codeChallengeMethod,
+      expiresAt,
+    });
+
+    const redirectUrl = new URL(redirectUri);
+    redirectUrl.searchParams.set('code', code);
+    redirectUrl.searchParams.set('state', state);
+
+    return c.redirect(redirectUrl.toString(), 302);
   });
 
   return app;
