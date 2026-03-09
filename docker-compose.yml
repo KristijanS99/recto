@@ -22,6 +22,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://recto:${DB_PASSWORD:-recto}@db:5432/recto
+      RECTO_ISSUER_URL: ${RECTO_ISSUER_URL:-http://localhost}
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:
@@ -42,6 +43,20 @@ services:
     depends_on:
       - api
 
+  proxy:
+    image: caddy:2-alpine
+    ports:
+      - "${RECTO_PORT:-80}:80"
+      - "${RECTO_TLS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - api
+      - mcp
+    environment:
+      - RECTO_DOMAIN=${RECTO_DOMAIN:-localhost}
+
   web:
     build:
       context: .
@@ -53,3 +68,4 @@ services:
 
 volumes:
   postgres_data:
+  caddy_data:
