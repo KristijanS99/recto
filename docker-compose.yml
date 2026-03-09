@@ -36,7 +36,6 @@ services:
     environment:
       RECTO_API_URL: http://api:3000
       RECTO_API_KEY: ${RECTO_API_KEY}
-      MCP_TRANSPORT: http
       MCP_PORT: "3001"
     ports:
       - "${MCP_PORT:-3001}:3001"
