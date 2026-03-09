@@ -8,6 +8,7 @@ import { authMiddleware } from './middleware/auth.js';
 import { entriesRoutes } from './routes/entries.js';
 import { instructionsRoutes } from './routes/instructions.js';
 import { mediaRoutes } from './routes/media.js';
+import { oauthRoutes } from './routes/oauth.js';
 import { promptsRoutes } from './routes/prompts.js';
 import { reflectRoutes } from './routes/reflect.js';
 import { searchRoutes } from './routes/search.js';
@@ -59,8 +60,22 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
   const system = systemRoutes(config);
   app.route('/', system);
 
+  // OAuth routes (no auth — public endpoints)
+  if (config.RECTO_ISSUER_URL) {
+    app.route(
+      '/',
+      oauthRoutes({
+        issuerUrl: config.RECTO_ISSUER_URL,
+        db,
+        apiKey: config.RECTO_API_KEY,
+        accessTokenTtl: config.RECTO_ACCESS_TOKEN_TTL,
+        refreshTokenTtl: config.RECTO_REFRESH_TOKEN_TTL,
+      }),
+    );
+  }
+
   // Auth middleware for all other routes
-  app.use('/*', authMiddleware(config.RECTO_API_KEY));
+  app.use('/*', authMiddleware(config.RECTO_API_KEY, db));
 
   // Build enrichment callback
   const effectiveLLM = llmProvider ?? new NullLLM();
