@@ -50,7 +50,7 @@ describe('POST /register', () => {
     });
 
     expect(res.status).toBe(201);
-    const body = await res.json();
+    const body = (await res.json()) as Record<string, unknown>;
     expect(body.client_id).toMatch(/^recto_/);
     expect(body.client_name).toBe('Test MCP Client');
     expect(body.redirect_uris).toEqual(['http://localhost:3000/callback']);
@@ -71,7 +71,7 @@ describe('POST /register', () => {
     });
 
     expect(res.status).toBe(201);
-    const body = await res.json();
+    const body = (await res.json()) as Record<string, unknown>;
     expect(body.client_id).toMatch(/^recto_/);
     expect(body.client_secret).toMatch(/^recto_secret_/);
   });

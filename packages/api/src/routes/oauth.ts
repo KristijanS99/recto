@@ -298,7 +298,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
 
       // Store access token
-      const [storedAccessToken] = await config.db
+      const storedAccessRows = await config.db
         .insert(accessTokens)
         .values({
           token: hashToken(accessTokenPlain),
@@ -307,6 +307,11 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
           expiresAt: new Date(Date.now() + accessTokenTtl * 1000),
         })
         .returning({ id: accessTokens.id });
+
+      const storedAccessToken = storedAccessRows[0];
+      if (!storedAccessToken) {
+        return c.json({ error: 'server_error', error_description: 'Failed to store token' }, 500);
+      }
 
       // Store refresh token linked to access token
       await config.db.insert(refreshTokens).values({
@@ -364,7 +369,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       const accessTokenTtl = config.accessTokenTtl ?? 3600;
       const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
 
-      const [newStoredAccessToken] = await config.db
+      const newAccessRows = await config.db
         .insert(accessTokens)
         .values({
           token: hashToken(newAccessTokenPlain),
@@ -373,6 +378,11 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
           expiresAt: new Date(Date.now() + accessTokenTtl * 1000),
         })
         .returning({ id: accessTokens.id });
+
+      const newStoredAccessToken = newAccessRows[0];
+      if (!newStoredAccessToken) {
+        return c.json({ error: 'server_error', error_description: 'Failed to store token' }, 500);
+      }
 
       await config.db.insert(refreshTokens).values({
         token: hashToken(newRefreshTokenPlain),

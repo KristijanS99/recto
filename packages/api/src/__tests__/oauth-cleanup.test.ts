@@ -10,7 +10,8 @@ import { cleanupExpiredTokens, hashToken } from '../services/oauth.js';
 
 let container: StartedPostgreSqlContainer;
 let client: ReturnType<typeof postgres>;
-let db: ReturnType<typeof drizzle>;
+// biome-ignore lint/suspicious/noExplicitAny: test helper
+let db: any;
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer('pgvector/pgvector:pg16').start();

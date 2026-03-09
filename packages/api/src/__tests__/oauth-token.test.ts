@@ -91,7 +91,7 @@ describe('POST /token', () => {
       });
 
       expect(res.status).toBe(200);
-      const body = await res.json();
+      const body = (await res.json()) as Record<string, unknown>;
       expect(body.access_token).toBeTruthy();
       expect(body.refresh_token).toBeTruthy();
       expect(body.token_type).toBe('Bearer');
@@ -171,7 +171,12 @@ describe('POST /token', () => {
         }).toString(),
       });
 
-      const tokens = await tokenRes.json();
+      const tokens = (await tokenRes.json()) as {
+        access_token: string;
+        refresh_token: string;
+        token_type: string;
+        expires_in: number;
+      };
 
       // Refresh
       const refreshRes = await app.request('/token', {
@@ -185,7 +190,7 @@ describe('POST /token', () => {
       });
 
       expect(refreshRes.status).toBe(200);
-      const newTokens = await refreshRes.json();
+      const newTokens = (await refreshRes.json()) as Record<string, unknown>;
       expect(newTokens.access_token).toBeTruthy();
       expect(newTokens.refresh_token).toBeTruthy();
       expect(newTokens.access_token).not.toBe(tokens.access_token);
