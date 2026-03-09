@@ -62,14 +62,14 @@ Recto is a TypeScript monorepo with three packages:
 recto/
 ├── packages/
 │   ├── api/     @recto/api   — Hono REST API, PostgreSQL + pgvector, Drizzle ORM
-│   ├── mcp/     @recto/mcp   — MCP server (stdio + HTTP/SSE), the AI journaling interface
+│   ├── mcp/     @recto/mcp   — MCP server (Streamable HTTP), the AI journaling interface
 │   └── web/     @recto/web   — React + Vite dashboard for browsing and managing entries
 ```
 
 | Package | Role | Stack |
 |---------|------|-------|
 | `@recto/api` | REST API & data layer | Hono, Drizzle ORM, PostgreSQL, pgvector |
-| `@recto/mcp` | AI assistant interface | MCP SDK, stdio + HTTP/SSE transports |
+| `@recto/mcp` | AI assistant interface | MCP SDK, Streamable HTTP transport |
 | `@recto/web` | Web dashboard | React, Vite, Tailwind CSS, TanStack Query |
 
 ## Features
