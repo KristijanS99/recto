@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { InstructionsEditor } from '../components/InstructionsEditor';
 import { PromptList } from '../components/PromptList';
+import { SETTINGS_TABS } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
-const TABS = ['Instructions', 'Prompts'] as const;
-type Tab = (typeof TABS)[number];
+type Tab = (typeof SETTINGS_TABS)[number];
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('Instructions');
@@ -16,7 +16,7 @@ export function Settings() {
       <h2 className="text-2xl font-semibold text-sand-800 dark:text-sand-100 mb-6">Settings</h2>
 
       <div className="flex gap-1 mb-6">
-        {TABS.map((tab) => (
+        {SETTINGS_TABS.map((tab) => (
           <button
             key={tab}
             type="button"

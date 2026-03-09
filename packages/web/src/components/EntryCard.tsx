@@ -1,19 +1,18 @@
 import { Link } from 'react-router';
 import type { Entry } from '../api/client';
+import { SNIPPET_PREVIEW_LENGTH, TITLE_PREVIEW_LENGTH } from '../constants';
+import { formatDateShort } from '../lib/format';
 import { TagBadge } from './TagBadge';
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 export function EntryCard({ entry }: { entry: Entry }) {
   const title =
-    entry.title ?? entry.content.slice(0, 80) + (entry.content.length > 80 ? '...' : '');
-  const snippet = entry.content.length > 200 ? `${entry.content.slice(0, 200)}...` : entry.content;
+    entry.title ??
+    entry.content.slice(0, TITLE_PREVIEW_LENGTH) +
+      (entry.content.length > TITLE_PREVIEW_LENGTH ? '...' : '');
+  const snippet =
+    entry.content.length > SNIPPET_PREVIEW_LENGTH
+      ? `${entry.content.slice(0, SNIPPET_PREVIEW_LENGTH)}...`
+      : entry.content;
 
   return (
     <Link
@@ -35,7 +34,7 @@ export function EntryCard({ entry }: { entry: Entry }) {
         </p>
         <div className="flex items-center gap-2 flex-wrap">
           <time className="text-xs text-sand-500 dark:text-sand-500">
-            {formatDate(entry.createdAt)}
+            {formatDateShort(entry.createdAt)}
           </time>
           {entry.tags?.map((tag) => (
             <TagBadge key={tag} tag={tag} />

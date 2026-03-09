@@ -4,13 +4,14 @@ import { useEntries } from '../api/queries';
 import { EmptyState } from '../components/EmptyState';
 import { EntryCard } from '../components/EntryCard';
 import { SkeletonList } from '../components/Skeleton';
+import { TIMELINE_PAGE_LIMIT } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function Timeline() {
   const [searchParams] = useSearchParams();
   const tag = searchParams.get('tag') ?? undefined;
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useEntries({ tag, limit: 10 });
+    useEntries({ tag, limit: TIMELINE_PAGE_LIMIT });
 
   const entries = data?.pages.flatMap((p) => p.data) ?? [];
 

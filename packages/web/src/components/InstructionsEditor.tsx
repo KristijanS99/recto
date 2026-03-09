@@ -1,6 +1,7 @@
 import { Loader2, RotateCcw, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useInstructions, useResetInstructions, useUpdateInstructions } from '../api/queries';
+import { FEEDBACK_DISMISS_MS } from '../constants';
 import { SkeletonDetail } from './Skeleton';
 
 export function InstructionsEditor() {
@@ -21,7 +22,7 @@ export function InstructionsEditor() {
 
   useEffect(() => {
     if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), 3000);
+      const timer = setTimeout(() => setFeedback(null), FEEDBACK_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [feedback]);

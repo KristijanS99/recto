@@ -1,6 +1,7 @@
 import { MessageSquarePlus, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useCreatePrompt, usePrompts } from '../api/queries';
+import { FEEDBACK_DISMISS_MS } from '../constants';
 import { EmptyState } from './EmptyState';
 import { PromptCard } from './PromptCard';
 import { PromptForm } from './PromptForm';
@@ -16,7 +17,7 @@ export function PromptList() {
 
   useEffect(() => {
     if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), 3000);
+      const timer = setTimeout(() => setFeedback(null), FEEDBACK_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [feedback]);

@@ -3,10 +3,11 @@ import { Link } from 'react-router';
 import { useEntries } from '../api/queries';
 import { EmptyState } from '../components/EmptyState';
 import { SkeletonList } from '../components/Skeleton';
+import { TAGS_ENTRY_LIMIT } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export function Tags() {
-  const { data, isLoading, isError, error } = useEntries({ limit: 100 });
+  const { data, isLoading, isError, error } = useEntries({ limit: TAGS_ENTRY_LIMIT });
 
   const entries = data?.pages.flatMap((p) => p.data) ?? [];
   const tagCounts = new Map<string, number>();

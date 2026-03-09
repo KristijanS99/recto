@@ -4,22 +4,14 @@ import { Link } from 'react-router';
 import { useSearch } from '../api/queries';
 import { EmptyState } from '../components/EmptyState';
 import { TagBadge } from '../components/TagBadge';
+import { SEARCH_MODES, type SearchMode } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-
-const MODES = ['hybrid', 'keyword', 'semantic'] as const;
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+import { formatDateShort } from '../lib/format';
 
 export function Search() {
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
-  const [mode, setMode] = useState<(typeof MODES)[number]>('hybrid');
+  const [mode, setMode] = useState<SearchMode>('hybrid');
 
   const { data, isLoading, isError, error } = useSearch(query, mode);
 
@@ -52,7 +44,7 @@ export function Search() {
         </div>
 
         <div className="flex gap-1 mt-3">
-          {MODES.map((m) => (
+          {SEARCH_MODES.map((m) => (
             <button
               key={m}
               type="button"
@@ -98,7 +90,7 @@ export function Search() {
                   {r.entry.title ?? 'Untitled'}
                 </h3>
                 <time className="text-xs text-sand-500 dark:text-sand-400 shrink-0">
-                  {formatDate(r.entry.createdAt)}
+                  {formatDateShort(r.entry.createdAt)}
                 </time>
               </div>
               {r.highlights?.[0] && (

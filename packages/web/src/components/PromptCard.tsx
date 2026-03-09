@@ -2,6 +2,7 @@ import { ChevronDown, ChevronRight, Loader2, RotateCcw, Trash2 } from 'lucide-re
 import { useEffect, useState } from 'react';
 import type { Prompt } from '../api/client';
 import { useDeletePrompt, useResetPrompt, useUpdatePrompt } from '../api/queries';
+import { FEEDBACK_DISMISS_MS } from '../constants';
 import { PromptForm } from './PromptForm';
 
 export function PromptCard({ prompt }: { prompt: Prompt }) {
@@ -17,7 +18,7 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
 
   useEffect(() => {
     if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), 3000);
+      const timer = setTimeout(() => setFeedback(null), FEEDBACK_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [feedback]);
