@@ -20,7 +20,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/mcp/node_modules ./packages/mcp/node_modules
 COPY --from=build /app/packages/mcp/dist ./packages/mcp/dist
 COPY packages/mcp/package.json ./packages/mcp/
-ENV MCP_TRANSPORT=http
 ENV MCP_PORT=3001
 EXPOSE 3001
 CMD ["node", "packages/mcp/dist/index.js"]

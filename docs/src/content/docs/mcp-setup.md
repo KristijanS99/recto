@@ -37,74 +37,15 @@ MCP clients that support the Prompts API will automatically discover these promp
 
 You can also create custom prompts via the REST API or the web dashboard's Settings page. See [Instructions & Prompts](/recto/instructions-and-prompts) for details.
 
-## Claude Desktop
+## Connecting Your AI Client
+
+Recto's MCP server uses Streamable HTTP transport. All clients connect via URL with a Bearer token (your `RECTO_API_KEY` or an OAuth access token).
+
+**Default endpoint:** `http://localhost:3001/mcp` (configurable via `MCP_PORT`)
+
+### Claude Desktop
 
 Add to your Claude Desktop MCP configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
-
-```json
-{
-  "mcpServers": {
-    "recto": {
-      "command": "npx",
-      "args": ["@recto/mcp"],
-      "env": {
-        "RECTO_API_URL": "http://localhost:3000",
-        "RECTO_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
-
-## Claude Code
-
-Add to your Claude Code MCP settings:
-
-```json
-{
-  "mcpServers": {
-    "recto": {
-      "command": "npx",
-      "args": ["@recto/mcp"],
-      "env": {
-        "RECTO_API_URL": "http://localhost:3000",
-        "RECTO_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
-
-## Cursor (stdio)
-
-Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or global settings):
-
-```json
-{
-  "mcpServers": {
-    "recto": {
-      "command": "npx",
-      "args": ["@recto/mcp"],
-      "env": {
-        "RECTO_API_URL": "http://localhost:3000",
-        "RECTO_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
-
-## Streamable HTTP Transport
-
-For remote or multi-client setups (e.g. running Recto via Docker), use the Streamable HTTP transport instead of stdio. Start the MCP server with `MCP_TRANSPORT=http`:
-
-```
-URL: http://localhost:3001/mcp
-```
-
-This is useful when you want a single Recto MCP server shared across multiple AI clients.
-
-### Cursor (HTTP)
 
 ```json
 {
@@ -119,16 +60,23 @@ This is useful when you want a single Recto MCP server shared across multiple AI
 }
 ```
 
-### Google Antigravity
+### Claude Code
+
+```bash
+claude mcp add recto --transport http http://localhost:3001/mcp
+```
+
+### Cursor
+
+Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or global settings):
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "serverUrl": "http://localhost:3001/mcp",
+      "url": "http://localhost:3001/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key",
-        "Content-Type": "application/json"
+        "Authorization": "Bearer your-api-key"
       }
     }
   }
@@ -137,7 +85,7 @@ This is useful when you want a single Recto MCP server shared across multiple AI
 
 ### Other HTTP-capable clients
 
-Most MCP clients that support Streamable HTTP accept a `url` or `serverUrl` field. The MCP server requires a Bearer token matching your `RECTO_API_KEY`:
+Most MCP clients that support Streamable HTTP accept a `url` or `serverUrl` field:
 
 ```json
 {
