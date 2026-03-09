@@ -16,7 +16,7 @@ let client: ReturnType<typeof postgres>;
 let db: any;
 let app: ReturnType<typeof createApp>;
 
-const TEST_API_KEY = 'test-api-key';
+const TEST_API_KEY = 'test-api-key-that-is-at-least-32-chars-long';
 const AUTH_HEADER = { Authorization: `Bearer ${TEST_API_KEY}` };
 
 const testConfig: Config = {

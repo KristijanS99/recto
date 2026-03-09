@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EMBEDDING_DIMENSIONS } from './constants.js';
+import { EMBEDDING_DIMENSIONS, MIN_API_KEY_LENGTH } from './constants.js';
 
 const embeddingProviderSchema = z.enum(['openai', 'voyageai', 'ollama', 'none']).default('none');
 const llmProviderSchema = z.enum(['anthropic', 'openai', 'none']).default('none');
@@ -10,7 +10,9 @@ const envSchema = z
     DATABASE_URL: z.string().url(),
 
     // Auth
-    RECTO_API_KEY: z.string().min(1),
+    RECTO_API_KEY: z
+      .string()
+      .min(MIN_API_KEY_LENGTH, `RECTO_API_KEY must be at least ${MIN_API_KEY_LENGTH} characters`),
 
     // OAuth
     RECTO_ISSUER_URL: z.string().url().optional(),

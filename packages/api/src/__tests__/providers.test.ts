@@ -12,7 +12,7 @@ import { AnthropicLLM, createLLMProvider, NullLLM, OpenAILLM } from '../services
 function makeConfig(overrides: Partial<Config> = {}): Config {
   return {
     DATABASE_URL: 'postgresql://x',
-    RECTO_API_KEY: 'key',
+    RECTO_API_KEY: 'test-api-key-that-is-at-least-32-chars-long',
     LLM_PROVIDER: 'none',
     ANTHROPIC_API_KEY: undefined,
     OPENAI_API_KEY: undefined,
