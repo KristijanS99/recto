@@ -321,8 +321,10 @@ describe('MCP Tools', () => {
     await Promise.all([mcpClient.connect(ct), server.connect(st)]);
 
     const result = await mcpClient.callTool({ name: 'get_entry', arguments: { id: 'bad-id' } });
-    // MCP SDK returns isError: true for tool errors
-    expect(result.isError).toBe(true);
+    // Error is caught and returned as a user-friendly text response
+    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
+    expect(text).toContain('Failed to get entry');
+    expect(text).toContain('Entry not found');
   });
 });
 

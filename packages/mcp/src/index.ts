@@ -56,7 +56,12 @@ createServer(async (req, res) => {
   const client = baseClient.withToken(authHeader.slice(7));
 
   if (req.url === '/mcp' && req.method === 'POST') {
-    const instructions = await getInstructions(client);
+    let instructions = '';
+    try {
+      instructions = await getInstructions(client);
+    } catch {
+      // Fall back to no custom instructions if API is unreachable
+    }
     const server = createMcpServer(client, instructions);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     await server.connect(transport);

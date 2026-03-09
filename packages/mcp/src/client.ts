@@ -40,7 +40,12 @@ export class RectoClient {
       headers: { ...this.headers, ...init?.headers },
     });
 
-    const body = await res.json();
+    let body: unknown;
+    try {
+      body = await res.json();
+    } catch {
+      throw new Error(`API returned invalid JSON (${res.status})`);
+    }
 
     if (!res.ok) {
       const msg = (body as { error?: { message?: string } })?.error?.message ?? res.statusText;
