@@ -21,18 +21,18 @@ function loadConfig() {
 async function main() {
   const config = loadConfig();
   const client = new RectoClient(config);
-  const server = createMcpServer(client);
 
-  const transport = process.env.MCP_TRANSPORT === 'http' ? await startHttp(server) : 'stdio';
-
-  if (transport === 'stdio') {
+  if (process.env.MCP_TRANSPORT === 'http') {
+    await startHttp(client);
+  } else {
+    const server = createMcpServer(client);
     const stdioTransport = new StdioServerTransport();
     await server.connect(stdioTransport);
     console.error('Recto MCP server running on stdio');
   }
 }
 
-async function startHttp(server: ReturnType<typeof createMcpServer>) {
+async function startHttp(baseClient: RectoClient) {
   const { createServer } = await import('node:http');
   const { StreamableHTTPServerTransport } = await import(
     '@modelcontextprotocol/sdk/server/streamableHttp.js'
@@ -44,7 +44,7 @@ async function startHttp(server: ReturnType<typeof createMcpServer>) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, mcp-session-id');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, mcp-session-id');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -56,6 +56,22 @@ async function startHttp(server: ReturnType<typeof createMcpServer>) {
       req.url === '/mcp' &&
       (req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE')
     ) {
+      // Require Bearer token for HTTP transport
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.writeHead(401, {
+          'Content-Type': 'application/json',
+          'WWW-Authenticate': 'Bearer',
+        });
+        res.end(JSON.stringify({ error: 'Unauthorized' }));
+        return;
+      }
+
+      // Forward the client's token to the API
+      const token = authHeader.slice(7);
+      const client = baseClient.withToken(token);
+      const server = createMcpServer(client);
+
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       await server.connect(transport);
       await transport.handleRequest(req, res);
