@@ -1,7 +1,7 @@
 import { MessageSquarePlus, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useCreatePrompt, usePrompts } from '../api/queries';
-import { FEEDBACK_DISMISS_MS } from '../constants';
+import { useFeedback } from '../hooks/useFeedback';
 import { EmptyState } from './EmptyState';
 import { PromptCard } from './PromptCard';
 import { PromptForm } from './PromptForm';
@@ -11,16 +11,7 @@ export function PromptList() {
   const { data, isLoading, isError, error } = usePrompts();
   const createMutation = useCreatePrompt();
   const [showCreate, setShowCreate] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), FEEDBACK_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [feedback]);
+  const { feedback, setFeedback } = useFeedback();
 
   async function handleCreate(formData: { name?: string; description: string; content: string }) {
     if (!formData.name) return;

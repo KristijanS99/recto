@@ -1,5 +1,6 @@
 import { Loader2, Save, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useAutoResizeTextarea } from '../hooks/useAutoResizeTextarea';
 
 interface PromptFormProps {
   initialName?: string;
@@ -25,14 +26,7 @@ export function PromptForm({
   const [content, setContent] = useState(initialContent);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: content drives textarea height recalculation
-  useEffect(() => {
-    const el = contentRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
-    }
-  }, [content]);
+  useAutoResizeTextarea(contentRef, content);
 
   const canSave = isNew
     ? name.trim().length > 0 && description.trim().length > 0 && content.trim().length > 0

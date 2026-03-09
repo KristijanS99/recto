@@ -1,27 +1,18 @@
 import { ChevronDown, ChevronRight, Loader2, RotateCcw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Prompt } from '../api/client';
 import { useDeletePrompt, useResetPrompt, useUpdatePrompt } from '../api/queries';
-import { FEEDBACK_DISMISS_MS } from '../constants';
+import { useFeedback } from '../hooks/useFeedback';
 import { PromptForm } from './PromptForm';
 
 export function PromptCard({ prompt }: { prompt: Prompt }) {
   const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
+  const { feedback, setFeedback } = useFeedback();
 
   const updateMutation = useUpdatePrompt();
   const deleteMutation = useDeletePrompt();
   const resetMutation = useResetPrompt();
-
-  useEffect(() => {
-    if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), FEEDBACK_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [feedback]);
 
   function showFeedback(type: 'success' | 'error', message: string) {
     setFeedback({ type, message });

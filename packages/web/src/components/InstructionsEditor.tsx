@@ -1,7 +1,8 @@
 import { Loader2, RotateCcw, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useInstructions, useResetInstructions, useUpdateInstructions } from '../api/queries';
-import { FEEDBACK_DISMISS_MS } from '../constants';
+import { useAutoResizeTextarea } from '../hooks/useAutoResizeTextarea';
+import { useFeedback } from '../hooks/useFeedback';
 import { SkeletonDetail } from './Skeleton';
 
 export function InstructionsEditor() {
@@ -11,34 +12,14 @@ export function InstructionsEditor() {
 
   const [content, setContent] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
+  const { feedback, setFeedback } = useFeedback();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (data) setContent(data.content);
   }, [data]);
 
-  useEffect(() => {
-    if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), FEEDBACK_DISMISS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [feedback]);
-
-  function autoResize() {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
-    }
-  }
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: content drives textarea height recalculation
-  useEffect(() => {
-    autoResize();
-  }, [content]);
+  useAutoResizeTextarea(textareaRef, content);
 
   const isDirty = data ? content !== data.content : false;
   const isSaving = updateMutation.isPending || resetMutation.isPending;
