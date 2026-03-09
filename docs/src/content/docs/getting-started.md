@@ -35,13 +35,17 @@ This starts five containers:
 
 ## Verify It Works
 
-Check the health endpoint:
+Check the health endpoints:
 
 ```bash
+# API health check
 curl http://localhost:3000/health
+
+# MCP health check
+curl http://localhost:3001/health
 ```
 
-You should see `{"status":"ok"}`. Open [http://localhost:5173](http://localhost:5173) to access the web dashboard directly, or [http://localhost](http://localhost) via the Caddy reverse proxy.
+Both should return `{"status":"ok"}`. Open [http://localhost:5173](http://localhost:5173) to access the web dashboard directly, or [http://localhost](http://localhost) via the Caddy reverse proxy.
 
 ## Next Steps
 

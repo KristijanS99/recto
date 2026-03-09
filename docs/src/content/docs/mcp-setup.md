@@ -103,6 +103,16 @@ Most MCP clients that support Streamable HTTP accept a `url` or `serverUrl` fiel
 }
 ```
 
+## Verify the Server
+
+Before testing with your AI client, confirm the MCP server is running:
+
+```bash
+curl http://localhost:3001/health
+```
+
+You should see `{"status":"ok"}`.
+
 ## Verify the Connection
 
 After configuring, test by asking your AI assistant:
