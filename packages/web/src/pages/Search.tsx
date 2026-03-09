@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { useSearch } from '../api/queries';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { TagBadge } from '../components/TagBadge';
 import { SEARCH_MODES, type SearchMode } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -69,7 +70,7 @@ export function Search() {
           <Loader2 className="w-6 h-6 text-sand-400 animate-spin-slow" />
         </div>
       )}
-      {isError && <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>}
+      {isError && <ErrorMessage error={error} />}
 
       {data && (
         <p className="text-sm text-sand-500 dark:text-sand-400 mb-4">

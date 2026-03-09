@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useCreatePrompt, usePrompts } from '../api/queries';
 import { useFeedback } from '../hooks/useFeedback';
 import { EmptyState } from './EmptyState';
+import { ErrorMessage } from './ErrorMessage';
+import { FeedbackBanner } from './FeedbackBanner';
 import { PromptCard } from './PromptCard';
 import { PromptForm } from './PromptForm';
 import { SkeletonList } from './Skeleton';
@@ -32,7 +34,7 @@ export function PromptList() {
   }
 
   if (isLoading) return <SkeletonList count={3} />;
-  if (isError) return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
+  if (isError) return <ErrorMessage error={error} />;
 
   const prompts = data?.data ?? [];
 
@@ -54,17 +56,7 @@ export function PromptList() {
         )}
       </div>
 
-      {feedback && (
-        <p
-          className={`text-sm mb-3 animate-fade-in ${
-            feedback.type === 'success'
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
-          }`}
-        >
-          {feedback.message}
-        </p>
-      )}
+      <FeedbackBanner feedback={feedback} className="mb-3" />
 
       {showCreate && (
         <div className="notebook-page py-4 px-5 mb-3">

@@ -2,6 +2,7 @@ import { Tag } from 'lucide-react';
 import { Link } from 'react-router';
 import { useEntries } from '../api/queries';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { SkeletonList } from '../components/Skeleton';
 import { TAGS_ENTRY_LIMIT } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -25,7 +26,7 @@ export function Tags() {
       <h2 className="text-2xl font-semibold text-sand-800 dark:text-sand-100 mb-6">Tags</h2>
 
       {isLoading && <SkeletonList count={2} />}
-      {isError && <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>}
+      {isError && <ErrorMessage error={error} />}
 
       {sorted.length === 0 && !isLoading && (
         <EmptyState

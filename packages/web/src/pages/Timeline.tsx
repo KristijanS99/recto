@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router';
 import { useEntries } from '../api/queries';
 import { EmptyState } from '../components/EmptyState';
 import { EntryCard } from '../components/EntryCard';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { SkeletonList } from '../components/Skeleton';
 import { TIMELINE_PAGE_LIMIT } from '../constants';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -34,7 +35,7 @@ export function Timeline() {
       </div>
 
       {isLoading && <SkeletonList count={3} />}
-      {isError && <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>}
+      {isError && <ErrorMessage error={error} />}
 
       <div className="flex flex-col gap-3">
         {entries.map((entry) => (

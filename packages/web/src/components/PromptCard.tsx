@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Prompt } from '../api/client';
 import { useDeletePrompt, useResetPrompt, useUpdatePrompt } from '../api/queries';
 import { useFeedback } from '../hooks/useFeedback';
+import { FeedbackBanner } from './FeedbackBanner';
 import { PromptForm } from './PromptForm';
 
 export function PromptCard({ prompt }: { prompt: Prompt }) {
@@ -140,17 +141,7 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
           </div>
         )}
 
-        {feedback && (
-          <p
-            className={`text-sm mt-3 animate-fade-in ${
-              feedback.type === 'success'
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400'
-            }`}
-          >
-            {feedback.message}
-          </p>
-        )}
+        <FeedbackBanner feedback={feedback} className="mt-3" />
       </div>
     </div>
   );
