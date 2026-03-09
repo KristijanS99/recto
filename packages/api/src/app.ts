@@ -53,7 +53,7 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
       );
     }
 
-    console.error('Unhandled error:', err);
+    logger.error('Unhandled error', { error: String(err), stack: err.stack });
     return c.json(
       { error: { code: ERROR_CODE.INTERNAL, message: 'Internal server error' } },
       HTTP_STATUS.INTERNAL,

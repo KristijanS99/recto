@@ -4,9 +4,12 @@ import { loadConfig } from './config.js';
 import { OAUTH_CLEANUP_INTERVAL_MS } from './constants.js';
 import { createDb } from './db/connection.js';
 import { runMigrations } from './db/migrate.js';
+import { createLogger } from './lib/logger.js';
 import { createEmbeddingProvider } from './services/embedding.js';
 import { createLLMProvider } from './services/llm.js';
 import { cleanupExpiredTokens } from './services/oauth.js';
+
+const logger = createLogger('server');
 
 async function main() {
   const config = loadConfig();
@@ -21,16 +24,16 @@ async function main() {
   // Schedule expired OAuth token cleanup every hour
   setInterval(() => {
     cleanupExpiredTokens(db).catch((err) => {
-      console.error('OAuth token cleanup failed:', err);
+      logger.error('OAuth token cleanup failed', { error: String(err) });
     });
   }, OAUTH_CLEANUP_INTERVAL_MS);
 
   serve({ fetch: app.fetch, port: config.API_PORT }, () => {
-    console.log(`@recto/api listening on port ${config.API_PORT}`);
+    logger.info('Server started', { port: config.API_PORT });
   });
 }
 
 main().catch((err) => {
-  console.error('Failed to start:', err);
+  logger.error('Failed to start', { error: String(err) });
   process.exit(1);
 });
