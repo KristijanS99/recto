@@ -8,7 +8,7 @@ Recto lets you control how your AI assistant interacts with your journal through
 
 ## Instructions
 
-Instructions are persistent system-level text that tells your AI assistant how to behave when journaling. Think of them as a personality and workflow guide.
+Instructions are persistent system-level text that tells your AI assistant how to behave when journaling. They are automatically injected into your AI assistant's context when it connects via MCP — no action required from the assistant.
 
 ### Default behavior
 
@@ -39,6 +39,10 @@ curl -X PUT -H "Authorization: Bearer $RECTO_API_KEY" \
 curl -X POST -H "Authorization: Bearer $RECTO_API_KEY" \
   http://localhost:3000/instructions/reset
 ```
+
+:::note
+Changes to instructions may take a few minutes to propagate due to server-side caching. Already-connected AI clients will receive the updated instructions on their next connection. Reconnect your AI client to apply changes immediately.
+:::
 
 ## Prompt Templates
 

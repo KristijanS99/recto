@@ -49,7 +49,7 @@ The primary journaling interface isn't a UI. It's your AI assistant (Claude, Cha
 - **Self-hosted** — Docker Compose, one command, your data never leaves your machine
 - **AI-agnostic** — bring your own API key: Anthropic, OpenAI, or local models via Ollama
 - **Progressive enhancement** — works with zero AI config (plain text + keyword search), gets smarter when you add API keys
-- **Customizable prompts** — built-in prompt templates (daily check-in, weekly review, gratitude, etc.) plus custom instructions for MCP behavior
+- **Customizable prompts** — built-in prompt templates (daily check-in, weekly review, gratitude, etc.) with custom instructions automatically injected at connection time
 - **Flexible auth** — single API key for quick setup, or OAuth 2.1 with PKCE for MCP HTTP transport
 
 ---
@@ -94,7 +94,6 @@ The MCP server exposes these tools to your AI assistant:
 
 | Tool | Description |
 |------|-------------|
-| `get_instructions` | Retrieve operating instructions for the journal |
 | `create_entry` | Create a new journal entry |
 | `get_entry` | Retrieve a specific entry |
 | `list_entries` | List entries with optional filters |

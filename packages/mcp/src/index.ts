@@ -12,6 +12,18 @@ if (!apiUrl) {
 const port = Number(process.env.MCP_PORT) || 3001;
 const baseClient = new RectoClient({ apiUrl, apiKey: '' });
 
+let cachedInstructions: { value: string; expiresAt: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000;
+
+async function getInstructions(client: RectoClient): Promise<string> {
+  if (cachedInstructions && Date.now() < cachedInstructions.expiresAt) {
+    return cachedInstructions.value;
+  }
+  const data = await client.getInstructions();
+  cachedInstructions = { value: data.content, expiresAt: Date.now() + CACHE_TTL };
+  return data.content;
+}
+
 createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
@@ -42,7 +54,8 @@ createServer(async (req, res) => {
   const client = baseClient.withToken(authHeader.slice(7));
 
   if (req.url === '/mcp' && req.method === 'POST') {
-    const server = createMcpServer(client);
+    const instructions = await getInstructions(client);
+    const server = createMcpServer(client, instructions);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     await server.connect(transport);
     await transport.handleRequest(req, res);

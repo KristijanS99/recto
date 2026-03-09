@@ -136,9 +136,9 @@ function createMockClient(): RectoClient {
 }
 
 describe('MCP Server', () => {
-  it('creates server with all 8 tools registered', () => {
+  it('creates server with all tools registered', () => {
     const client = createMockClient();
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     expect(server).toBeDefined();
   });
 });
@@ -147,7 +147,7 @@ describe('MCP Tools', () => {
   // Helper to call a tool on the MCP server
   async function callTool(toolName: string, args: Record<string, unknown>) {
     const client = createMockClient();
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
 
     // Access internal tool registry via the server's underlying handler
     // We'll test through the protocol by creating a mock transport
@@ -213,7 +213,7 @@ describe('MCP Tools', () => {
       has_more: false,
     });
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -312,7 +312,7 @@ describe('MCP Tools', () => {
       new Error('API error (404): Entry not found'),
     );
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -326,28 +326,10 @@ describe('MCP Tools', () => {
   });
 });
 
-describe('get_instructions tool', () => {
-  it('should return instructions content', async () => {
-    const client = createMockClient();
-    const server = createMcpServer(client);
-    const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-    const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
-
-    const [ct, st] = InMemoryTransport.createLinkedPair();
-    const mcpClient = new Client({ name: 'test-client', version: '1.0.0' });
-    await Promise.all([mcpClient.connect(ct), server.connect(st)]);
-
-    const result = await mcpClient.callTool({ name: 'get_instructions', arguments: {} });
-    const text = (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
-    expect(text).toContain('Test instructions content');
-    expect(client.getInstructions).toHaveBeenCalled();
-  });
-});
-
 describe('MCP prompts', () => {
   it('should list available prompts', async () => {
     const client = createMockClient();
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -364,7 +346,7 @@ describe('MCP prompts', () => {
 
   it('should return prompt content when invoked', async () => {
     const client = createMockClient();
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -388,7 +370,7 @@ describe('Edge cases — search, list, format, prompts', () => {
       total: 0,
     });
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -422,7 +404,7 @@ describe('Edge cases — search, list, format, prompts', () => {
       has_more: true,
     });
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -448,7 +430,7 @@ describe('Edge cases — search, list, format, prompts', () => {
       created_at: '2024-01-15T10:00:00Z',
     });
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -477,7 +459,7 @@ describe('Edge cases — search, list, format, prompts', () => {
       created_at: '2024-01-15T10:00:00Z',
     });
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -499,7 +481,7 @@ describe('Edge cases — search, list, format, prompts', () => {
       data: [],
     });
 
-    const server = createMcpServer(client);
+    const server = createMcpServer(client, 'Test instructions content');
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
     const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 
@@ -536,7 +518,7 @@ describe('individual prompt handlers', () => {
   for (const name of promptNames) {
     it(`returns content for "${name}" prompt`, async () => {
       const client = createMockClient();
-      const server = createMcpServer(client);
+      const server = createMcpServer(client, 'Test instructions content');
       const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
       const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
 

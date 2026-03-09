@@ -73,7 +73,9 @@ export function InstructionsEditor() {
   return (
     <div className="animate-fade-in">
       <p className="text-sm text-sand-500 dark:text-sand-400 mb-4">
-        These instructions are sent to the AI at the start of every conversation via MCP.
+        These instructions are automatically sent to your AI assistant when it connects via MCP.
+        Changes may take a few minutes to reach connected clients. Reconnect your AI client to apply
+        immediately.
       </p>
 
       <textarea

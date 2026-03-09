@@ -27,33 +27,10 @@ function formatEntry(entry: Record<string, unknown>): string {
   return `**${title}** (${date})${tags}${mood}\n${snippet}`;
 }
 
-export function createMcpServer(client: RectoClient): McpServer {
-  const instructionsCache = new TtlCache(() => client.getInstructions());
+export function createMcpServer(client: RectoClient, instructions: string): McpServer {
   const promptsCache = new TtlCache(() => client.getPrompts());
 
-  const server = new McpServer(
-    { name: 'recto', version: '0.1.0' },
-    {
-      instructions:
-        'Call the get_instructions tool at the start of every conversation to receive your operating instructions.',
-    },
-  );
-
-  // --- get_instructions (fallback tool) ---
-  server.registerTool(
-    'get_instructions',
-    {
-      description:
-        'Retrieve your operating instructions for this journal. Call this at the start of every conversation to understand how you should behave.',
-      inputSchema: {},
-    },
-    async () => {
-      const data = await instructionsCache.get();
-      return {
-        content: [{ type: 'text' as const, text: data.content }],
-      };
-    },
-  );
+  const server = new McpServer({ name: 'recto', version: '0.1.0' }, { instructions });
 
   // --- MCP Prompts ---
   const promptNames = [

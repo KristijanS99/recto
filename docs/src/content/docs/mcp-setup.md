@@ -6,13 +6,16 @@ draft: false
 
 [Model Context Protocol (MCP)](https://modelcontextprotocol.io) is the standard for connecting AI assistants to external tools. Recto's MCP server gives your AI assistant the ability to create, search, and reflect on journal entries.
 
+## How Instructions Work
+
+When your AI client connects, Recto automatically sends your [custom instructions](/recto/instructions-and-prompts) as part of the MCP handshake. This tells the assistant how to behave (e.g., auto-capture entries, use tools proactively) — no tool call required.
+
 ## Available Tools
 
 Once connected, your AI assistant can use these tools:
 
 | Tool | Description |
 |------|-------------|
-| `get_instructions` | Retrieve operating instructions for the journal |
 | `create_entry` | Create a new journal entry |
 | `get_entry` | Retrieve a specific entry |
 | `list_entries` | List entries with optional filters |
