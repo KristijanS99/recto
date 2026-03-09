@@ -23,6 +23,41 @@ export interface OAuthRoutesConfig {
   refreshTokenTtl?: number;
 }
 
+// ---------------------------------------------------------------------------
+// File-level constants
+// ---------------------------------------------------------------------------
+
+/** Default access token lifetime in seconds (1 hour) */
+const DEFAULT_ACCESS_TOKEN_TTL = 3600;
+
+/** Default refresh token lifetime in seconds (90 days) */
+const DEFAULT_REFRESH_TOKEN_TTL = 7_776_000;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Validates the client secret for confidential OAuth clients.
+ * Returns `true` when authentication succeeds (or is not required).
+ * Returns a string error description when authentication fails.
+ */
+function validateConfidentialClient(
+  client: { tokenEndpointAuthMethod: string; clientSecret: string | null },
+  providedSecret: string | undefined,
+): true | string {
+  if (client.tokenEndpointAuthMethod !== 'client_secret_post') {
+    return true;
+  }
+  if (!providedSecret || !client.clientSecret) {
+    return 'Client secret required';
+  }
+  if (hashToken(providedSecret) !== client.clientSecret) {
+    return 'Invalid client secret';
+  }
+  return true;
+}
+
 const redirectUriSchema = z
   .string()
   .url()
@@ -305,20 +340,22 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
         .where(eq(oauthClients.clientId, clientId))
         .limit(1);
 
-      if (oauthClient?.tokenEndpointAuthMethod === 'client_secret_post') {
-        const clientSecret = body.client_secret as string;
-        if (!clientSecret || !oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Client secret required' },
-            HTTP_STATUS.UNAUTHORIZED,
-          );
-        }
-        if (hashToken(clientSecret) !== oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Invalid client secret' },
-            HTTP_STATUS.UNAUTHORIZED,
-          );
-        }
+      if (!oauthClient) {
+        return c.json(
+          { error: 'invalid_client', error_description: 'Unknown client' },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
+      }
+
+      const secretResult = validateConfidentialClient(
+        oauthClient,
+        body.client_secret as string | undefined,
+      );
+      if (secretResult !== true) {
+        return c.json(
+          { error: 'invalid_client', error_description: secretResult },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
       }
 
       // Verify PKCE
@@ -332,8 +369,8 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       // Generate tokens
       const accessTokenPlain = generateRandomToken();
       const refreshTokenPlain = generateRandomToken();
-      const accessTokenTtl = config.accessTokenTtl ?? 3600;
-      const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
+      const accessTokenTtl = config.accessTokenTtl ?? DEFAULT_ACCESS_TOKEN_TTL;
+      const refreshTokenTtl = config.refreshTokenTtl ?? DEFAULT_REFRESH_TOKEN_TTL;
 
       // Store access token
       const storedAccessRows = await config.db
@@ -410,20 +447,22 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
         .where(eq(oauthClients.clientId, clientId))
         .limit(1);
 
-      if (oauthClient?.tokenEndpointAuthMethod === 'client_secret_post') {
-        const clientSecret = body.client_secret as string;
-        if (!clientSecret || !oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Client secret required' },
-            HTTP_STATUS.UNAUTHORIZED,
-          );
-        }
-        if (hashToken(clientSecret) !== oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Invalid client secret' },
-            HTTP_STATUS.UNAUTHORIZED,
-          );
-        }
+      if (!oauthClient) {
+        return c.json(
+          { error: 'invalid_client', error_description: 'Unknown client' },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
+      }
+
+      const secretResult = validateConfidentialClient(
+        oauthClient,
+        body.client_secret as string | undefined,
+      );
+      if (secretResult !== true) {
+        return c.json(
+          { error: 'invalid_client', error_description: secretResult },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
       }
 
       // Delete old refresh token and old access token (rotation)
@@ -433,8 +472,8 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       // Generate new tokens
       const newAccessTokenPlain = generateRandomToken();
       const newRefreshTokenPlain = generateRandomToken();
-      const accessTokenTtl = config.accessTokenTtl ?? 3600;
-      const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
+      const accessTokenTtl = config.accessTokenTtl ?? DEFAULT_ACCESS_TOKEN_TTL;
+      const refreshTokenTtl = config.refreshTokenTtl ?? DEFAULT_REFRESH_TOKEN_TTL;
 
       const newAccessRows = await config.db
         .insert(accessTokens)
