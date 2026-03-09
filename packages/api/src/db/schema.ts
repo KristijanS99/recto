@@ -61,6 +61,60 @@ export const prompts = pgTable('prompts', {
 export type Prompt = typeof prompts.$inferSelect;
 export type NewPrompt = typeof prompts.$inferInsert;
 
+// ---------------------------------------------------------------------------
+// OAuth tables
+// ---------------------------------------------------------------------------
+
+export const oauthClients = pgTable('oauth_clients', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: text('client_id').notNull().unique(),
+  clientSecret: text('client_secret'),
+  clientName: text('client_name').notNull(),
+  redirectUris: text('redirect_uris').array().notNull(),
+  grantTypes: text('grant_types').array().notNull().default(['authorization_code']),
+  responseTypes: text('response_types').array().notNull().default(['code']),
+  tokenEndpointAuthMethod: text('token_endpoint_auth_method').notNull().default('none'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type OAuthClient = typeof oauthClients.$inferSelect;
+export type NewOAuthClient = typeof oauthClients.$inferInsert;
+
+export const authorizationCodes = pgTable('authorization_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  code: text('code').notNull().unique(),
+  clientId: text('client_id').notNull(),
+  redirectUri: text('redirect_uri').notNull(),
+  codeChallenge: text('code_challenge').notNull(),
+  codeChallengeMethod: text('code_challenge_method').notNull().default('S256'),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type AuthorizationCode = typeof authorizationCodes.$inferSelect;
+
+export const accessTokens = pgTable('access_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  token: text('token').notNull().unique(),
+  clientId: text('client_id').notNull(),
+  scopes: text('scopes').array().notNull().default([]),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type AccessToken = typeof accessTokens.$inferSelect;
+
+export const refreshTokens = pgTable('refresh_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  token: text('token').notNull().unique(),
+  clientId: text('client_id').notNull(),
+  accessTokenId: uuid('access_token_id').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type RefreshToken = typeof refreshTokens.$inferSelect;
+
 export interface MediaItem {
   type: 'image' | 'audio' | 'video' | 'link';
   url: string;
