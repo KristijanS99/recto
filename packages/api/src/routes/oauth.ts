@@ -1,4 +1,3 @@
-import { timingSafeEqual } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
 import { and, eq, gt } from 'drizzle-orm';
 import { Hono } from 'hono';
@@ -6,6 +5,7 @@ import { z } from 'zod';
 import { AUTH_CODE_EXPIRY_MS, HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { accessTokens, authorizationCodes, oauthClients, refreshTokens } from '../db/schema.js';
+import { safeEqual } from '../lib/crypto.js';
 import {
   generateClientId,
   generateClientSecret,
@@ -14,11 +14,6 @@ import {
   verifyPkceChallenge,
 } from '../services/oauth.js';
 import { renderAuthorizePage } from '../templates/authorize.js';
-
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
-}
 
 export interface OAuthRoutesConfig {
   issuerUrl: string;
