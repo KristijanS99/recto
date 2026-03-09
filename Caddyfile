@@ -1,0 +1,9 @@
+{$RECTO_DOMAIN:localhost} {
+	handle /mcp/* {
+		reverse_proxy mcp:3001
+	}
+
+	handle {
+		reverse_proxy api:3000
+	}
+}

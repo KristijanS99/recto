@@ -15,6 +15,17 @@ export class RectoClient {
     };
   }
 
+  /**
+   * Create a new client instance using a different auth token.
+   * Used to forward OAuth tokens from MCP clients to the API.
+   */
+  withToken(token: string): RectoClient {
+    return new RectoClient({
+      apiUrl: this.baseUrl,
+      apiKey: token,
+    });
+  }
+
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       ...init,

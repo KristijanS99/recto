@@ -32,20 +32,19 @@ async function main() {
   }
 }
 
-async function startHttp(client: RectoClient) {
+async function startHttp(baseClient: RectoClient) {
   const { createServer } = await import('node:http');
   const { StreamableHTTPServerTransport } = await import(
     '@modelcontextprotocol/sdk/server/streamableHttp.js'
   );
 
   const port = Number(process.env.MCP_PORT) || 3001;
-  const apiKey = process.env.RECTO_API_KEY;
 
   createServer(async (req, res) => {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, mcp-session-id, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, mcp-session-id');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -53,11 +52,13 @@ async function startHttp(client: RectoClient) {
       return;
     }
 
-    // Authenticate Bearer token
-    const auth = req.headers.authorization;
-    const token = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined;
-    if (token !== apiKey) {
-      res.writeHead(401);
+    // Require Bearer token for HTTP transport
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.writeHead(401, {
+        'Content-Type': 'application/json',
+        'WWW-Authenticate': 'Bearer',
+      });
       res.end(
         JSON.stringify({
           jsonrpc: '2.0',
@@ -67,6 +68,10 @@ async function startHttp(client: RectoClient) {
       );
       return;
     }
+
+    // Forward the client's token to the API
+    const token = authHeader.slice(7);
+    const client = baseClient.withToken(token);
 
     if (req.url === '/mcp' && req.method === 'POST') {
       const server = createMcpServer(client);

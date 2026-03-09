@@ -17,6 +17,11 @@ const envSchema = z
     // Auth
     RECTO_API_KEY: z.string().min(1),
 
+    // OAuth
+    RECTO_ISSUER_URL: z.string().url().optional(),
+    RECTO_ACCESS_TOKEN_TTL: z.coerce.number().int().positive().default(3600),
+    RECTO_REFRESH_TOKEN_TTL: z.coerce.number().int().positive().default(7776000),
+
     // LLM
     LLM_PROVIDER: llmProviderSchema,
     ANTHROPIC_API_KEY: z.string().optional(),
