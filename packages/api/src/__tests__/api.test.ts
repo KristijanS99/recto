@@ -29,6 +29,8 @@ const testConfig: Config = {
   OLLAMA_URL: undefined,
   OLLAMA_EMBEDDING_MODEL: 'nomic-embed-text',
   API_PORT: 3000,
+  RECTO_ACCESS_TOKEN_TTL: 3600,
+  RECTO_REFRESH_TOKEN_TTL: 7776000,
   embeddingDimensions: null,
 };
 
