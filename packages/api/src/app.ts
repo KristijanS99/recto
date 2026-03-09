@@ -17,7 +17,6 @@ import { entryTagsRoutes, tagsRoutes } from './routes/tags.js';
 import { type EmbeddingProvider, NullEmbedding } from './services/embedding.js';
 import { enrichEntry } from './services/enrichment.js';
 import { type LLMProvider, NullLLM } from './services/llm.js';
-import { cleanupExpiredTokens } from './services/oauth.js';
 
 const logger = createLogger('app');
 
@@ -110,16 +109,6 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
   // Instructions & prompts routes
   app.route('/instructions', instructionsRoutes(db));
   app.route('/prompts', promptsRoutes(db));
-
-  // Schedule expired OAuth token cleanup every hour
-  setInterval(
-    () => {
-      cleanupExpiredTokens(db).catch((err) => {
-        console.error('OAuth token cleanup failed:', err);
-      });
-    },
-    60 * 60 * 1000,
-  );
 
   return app;
 }

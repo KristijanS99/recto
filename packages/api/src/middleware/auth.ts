@@ -1,8 +1,14 @@
+import { timingSafeEqual } from 'node:crypto';
 import { and, eq, gt } from 'drizzle-orm';
 import type { MiddlewareHandler } from 'hono';
 import type { Database } from '../db/connection.js';
 import { accessTokens } from '../db/schema.js';
 import { hashToken } from '../services/oauth.js';
+
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 export function authMiddleware(apiKey: string, db?: Database): MiddlewareHandler {
   return async (c, next) => {
@@ -19,8 +25,8 @@ export function authMiddleware(apiKey: string, db?: Database): MiddlewareHandler
       return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid API key' } }, 401);
     }
 
-    // Fast path: static API key
-    if (token === apiKey) {
+    // Fast path: static API key (timing-safe comparison)
+    if (safeEqual(token, apiKey)) {
       await next();
       return;
     }

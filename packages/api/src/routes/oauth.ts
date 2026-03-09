@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
 import { and, eq, gt } from 'drizzle-orm';
 import { Hono } from 'hono';
@@ -12,6 +13,11 @@ import {
   verifyPkceChallenge,
 } from '../services/oauth.js';
 import { renderAuthorizePage } from '../templates/authorize.js';
+
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 export interface OAuthRoutesConfig {
   issuerUrl: string;
@@ -51,7 +57,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       token_endpoint: `${config.issuerUrl}/token`,
       registration_endpoint: `${config.issuerUrl}/register`,
       response_types_supported: ['code'],
-      grant_types_supported: ['authorization_code'],
+      grant_types_supported: ['authorization_code', 'refresh_token'],
       token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
       code_challenge_methods_supported: ['S256'],
     });
@@ -131,6 +137,10 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       return c.json({ error: 'Unsupported response_type' }, 400);
     }
 
+    if (codeChallengeMethod !== 'S256') {
+      return c.text('Bad Request: only S256 code_challenge_method is supported', 400);
+    }
+
     const [client] = await config.db
       .select()
       .from(oauthClients)
@@ -191,7 +201,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       return c.json({ error: 'Invalid redirect_uri' }, 400);
     }
 
-    if (!apiKey || apiKey !== config.apiKey) {
+    if (!apiKey || !config.apiKey || !safeEqual(apiKey, config.apiKey)) {
       const html = renderAuthorizePage({
         clientName: client.clientName,
         clientId,
@@ -272,12 +282,38 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
         );
       }
 
+      // Delete code immediately (single-use, regardless of subsequent checks)
+      await config.db.delete(authorizationCodes).where(eq(authorizationCodes.id, authCode.id));
+
       if (authCode.clientId !== clientId) {
         return c.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, 400);
       }
 
       if (authCode.redirectUri !== redirectUri) {
         return c.json({ error: 'invalid_grant', error_description: 'Redirect URI mismatch' }, 400);
+      }
+
+      // Verify client secret for confidential clients
+      const [oauthClient] = await config.db
+        .select()
+        .from(oauthClients)
+        .where(eq(oauthClients.clientId, clientId))
+        .limit(1);
+
+      if (oauthClient?.tokenEndpointAuthMethod === 'client_secret_post') {
+        const clientSecret = body.client_secret as string;
+        if (!clientSecret || !oauthClient.clientSecret) {
+          return c.json(
+            { error: 'invalid_client', error_description: 'Client secret required' },
+            401,
+          );
+        }
+        if (hashToken(clientSecret) !== oauthClient.clientSecret) {
+          return c.json(
+            { error: 'invalid_client', error_description: 'Invalid client secret' },
+            401,
+          );
+        }
       }
 
       // Verify PKCE
@@ -287,9 +323,6 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
           400,
         );
       }
-
-      // Delete the authorization code (single-use)
-      await config.db.delete(authorizationCodes).where(eq(authorizationCodes.id, authCode.id));
 
       // Generate tokens
       const accessTokenPlain = generateRandomToken();
@@ -357,6 +390,29 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
 
       if (storedRefresh.clientId !== clientId) {
         return c.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, 400);
+      }
+
+      // Verify client secret for confidential clients
+      const [oauthClient] = await config.db
+        .select()
+        .from(oauthClients)
+        .where(eq(oauthClients.clientId, clientId))
+        .limit(1);
+
+      if (oauthClient?.tokenEndpointAuthMethod === 'client_secret_post') {
+        const clientSecret = body.client_secret as string;
+        if (!clientSecret || !oauthClient.clientSecret) {
+          return c.json(
+            { error: 'invalid_client', error_description: 'Client secret required' },
+            401,
+          );
+        }
+        if (hashToken(clientSecret) !== oauthClient.clientSecret) {
+          return c.json(
+            { error: 'invalid_client', error_description: 'Invalid client secret' },
+            401,
+          );
+        }
       }
 
       // Delete old refresh token and old access token (rotation)
