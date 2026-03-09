@@ -8,34 +8,55 @@ import Footer from '../components/Footer.astro';
 // biome-ignore lint/correctness/noUnusedImports: used in Astro template
 import ScrollReveal from '../components/ScrollReveal.astro';
 // biome-ignore lint/correctness/noUnusedImports: used in Astro template
-import Landing from '../layouts/Landing.astro';
-// biome-ignore lint/correctness/noUnusedImports: used in Astro template
 import roadmapData from '../data/roadmap.json';
+// biome-ignore lint/correctness/noUnusedImports: used in Astro template
+import Landing from '../layouts/Landing.astro';
 
 // biome-ignore lint/correctness/noUnusedVariables: used in Astro template
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 
 // biome-ignore lint/correctness/noUnusedVariables: used in Astro template
-const statusColors: Record<string, { bg: string; text: string; darkBg: string; darkText: string; label: string }> = {
-	planned: { bg: 'bg-amber-100', text: 'text-amber-700', darkBg: 'dark:bg-amber-900/20', darkText: 'dark:text-amber-400', label: 'Planned' },
-	'in-progress': { bg: 'bg-blue-100', text: 'text-blue-700', darkBg: 'dark:bg-blue-900/20', darkText: 'dark:text-blue-400', label: 'In Progress' },
-	done: { bg: 'bg-emerald-100', text: 'text-emerald-700', darkBg: 'dark:bg-emerald-900/20', darkText: 'dark:text-emerald-400', label: 'Done' },
+const statusColors: Record<
+  string,
+  { bg: string; text: string; darkBg: string; darkText: string; label: string }
+> = {
+  planned: {
+    bg: 'bg-amber-100',
+    text: 'text-amber-700',
+    darkBg: 'dark:bg-amber-900/20',
+    darkText: 'dark:text-amber-400',
+    label: 'Planned',
+  },
+  'in-progress': {
+    bg: 'bg-blue-100',
+    text: 'text-blue-700',
+    darkBg: 'dark:bg-blue-900/20',
+    darkText: 'dark:text-blue-400',
+    label: 'In Progress',
+  },
+  done: {
+    bg: 'bg-emerald-100',
+    text: 'text-emerald-700',
+    darkBg: 'dark:bg-emerald-900/20',
+    darkText: 'dark:text-emerald-400',
+    label: 'Done',
+  },
 };
 
 // biome-ignore lint/correctness/noUnusedVariables: used in Astro template
 const typeLabels: Record<string, string> = {
-	feature: 'Feature',
-	bug: 'Bug',
-	improvement: 'Improvement',
+  feature: 'Feature',
+  bug: 'Bug',
+  improvement: 'Improvement',
 };
 
 // biome-ignore lint/correctness/noUnusedVariables: used in Astro template
 const categoryLabels: Record<string, string> = {
-	api: 'API',
-	mcp: 'MCP',
-	web: 'Web',
-	infra: 'Infra',
-	root: 'Monorepo',
+  api: 'API',
+  mcp: 'MCP',
+  web: 'Web',
+  infra: 'Infra',
+  root: 'Monorepo',
 };
 
 // biome-ignore lint/correctness/noUnusedVariables: used in Astro template
