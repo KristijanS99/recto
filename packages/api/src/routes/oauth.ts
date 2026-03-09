@@ -1,14 +1,15 @@
 import { zValidator } from '@hono/zod-validator';
-import { eq } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Database } from '../db/connection.js';
-import { authorizationCodes, oauthClients } from '../db/schema.js';
+import { accessTokens, authorizationCodes, oauthClients, refreshTokens } from '../db/schema.js';
 import {
   generateClientId,
   generateClientSecret,
   generateRandomToken,
   hashToken,
+  verifyPkceChallenge,
 } from '../services/oauth.js';
 import { renderAuthorizePage } from '../templates/authorize.js';
 
@@ -222,6 +223,176 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
     redirectUrl.searchParams.set('state', state);
 
     return c.redirect(redirectUrl.toString(), 302);
+  });
+
+  // --------------------------------------------------------------------------
+  // POST /token — Exchange authorization code or refresh token for tokens
+  // --------------------------------------------------------------------------
+  app.post('/token', async (c) => {
+    if (!config.db) {
+      return c.json(
+        { error: 'server_error', error_description: 'Token endpoint not available' },
+        500,
+      );
+    }
+
+    const body = await c.req.parseBody();
+    const grantType = body.grant_type as string | undefined;
+
+    if (grantType === 'authorization_code') {
+      const code = body.code as string | undefined;
+      const codeVerifier = body.code_verifier as string | undefined;
+      const clientId = body.client_id as string | undefined;
+      const redirectUri = body.redirect_uri as string | undefined;
+
+      if (!code || !codeVerifier || !clientId || !redirectUri) {
+        return c.json(
+          { error: 'invalid_request', error_description: 'Missing required parameters' },
+          400,
+        );
+      }
+
+      // Look up the authorization code
+      const hashedCode = hashToken(code);
+      const [authCode] = await config.db
+        .select()
+        .from(authorizationCodes)
+        .where(
+          and(
+            eq(authorizationCodes.code, hashedCode),
+            gt(authorizationCodes.expiresAt, new Date()),
+          ),
+        )
+        .limit(1);
+
+      if (!authCode) {
+        return c.json(
+          { error: 'invalid_grant', error_description: 'Invalid or expired authorization code' },
+          400,
+        );
+      }
+
+      if (authCode.clientId !== clientId) {
+        return c.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, 400);
+      }
+
+      if (authCode.redirectUri !== redirectUri) {
+        return c.json({ error: 'invalid_grant', error_description: 'Redirect URI mismatch' }, 400);
+      }
+
+      // Verify PKCE
+      if (!verifyPkceChallenge(codeVerifier, authCode.codeChallenge)) {
+        return c.json(
+          { error: 'invalid_grant', error_description: 'PKCE verification failed' },
+          400,
+        );
+      }
+
+      // Delete the authorization code (single-use)
+      await config.db.delete(authorizationCodes).where(eq(authorizationCodes.id, authCode.id));
+
+      // Generate tokens
+      const accessTokenPlain = generateRandomToken();
+      const refreshTokenPlain = generateRandomToken();
+      const accessTokenTtl = config.accessTokenTtl ?? 3600;
+      const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
+
+      // Store access token
+      const [storedAccessToken] = await config.db
+        .insert(accessTokens)
+        .values({
+          token: hashToken(accessTokenPlain),
+          clientId,
+          scopes: [],
+          expiresAt: new Date(Date.now() + accessTokenTtl * 1000),
+        })
+        .returning({ id: accessTokens.id });
+
+      // Store refresh token linked to access token
+      await config.db.insert(refreshTokens).values({
+        token: hashToken(refreshTokenPlain),
+        clientId,
+        accessTokenId: storedAccessToken.id,
+        expiresAt: new Date(Date.now() + refreshTokenTtl * 1000),
+      });
+
+      return c.json({
+        access_token: accessTokenPlain,
+        refresh_token: refreshTokenPlain,
+        token_type: 'Bearer',
+        expires_in: accessTokenTtl,
+      });
+    }
+
+    if (grantType === 'refresh_token') {
+      const refreshToken = body.refresh_token as string | undefined;
+      const clientId = body.client_id as string | undefined;
+
+      if (!refreshToken || !clientId) {
+        return c.json(
+          { error: 'invalid_request', error_description: 'Missing required parameters' },
+          400,
+        );
+      }
+
+      // Look up the refresh token
+      const hashedRefresh = hashToken(refreshToken);
+      const [storedRefresh] = await config.db
+        .select()
+        .from(refreshTokens)
+        .where(and(eq(refreshTokens.token, hashedRefresh), gt(refreshTokens.expiresAt, new Date())))
+        .limit(1);
+
+      if (!storedRefresh) {
+        return c.json(
+          { error: 'invalid_grant', error_description: 'Invalid or expired refresh token' },
+          400,
+        );
+      }
+
+      if (storedRefresh.clientId !== clientId) {
+        return c.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, 400);
+      }
+
+      // Delete old refresh token and old access token (rotation)
+      await config.db.delete(refreshTokens).where(eq(refreshTokens.id, storedRefresh.id));
+      await config.db.delete(accessTokens).where(eq(accessTokens.id, storedRefresh.accessTokenId));
+
+      // Generate new tokens
+      const newAccessTokenPlain = generateRandomToken();
+      const newRefreshTokenPlain = generateRandomToken();
+      const accessTokenTtl = config.accessTokenTtl ?? 3600;
+      const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
+
+      const [newStoredAccessToken] = await config.db
+        .insert(accessTokens)
+        .values({
+          token: hashToken(newAccessTokenPlain),
+          clientId,
+          scopes: [],
+          expiresAt: new Date(Date.now() + accessTokenTtl * 1000),
+        })
+        .returning({ id: accessTokens.id });
+
+      await config.db.insert(refreshTokens).values({
+        token: hashToken(newRefreshTokenPlain),
+        clientId,
+        accessTokenId: newStoredAccessToken.id,
+        expiresAt: new Date(Date.now() + refreshTokenTtl * 1000),
+      });
+
+      return c.json({
+        access_token: newAccessTokenPlain,
+        refresh_token: newRefreshTokenPlain,
+        token_type: 'Bearer',
+        expires_in: accessTokenTtl,
+      });
+    }
+
+    return c.json(
+      { error: 'unsupported_grant_type', error_description: 'Unsupported grant type' },
+      400,
+    );
   });
 
   return app;
