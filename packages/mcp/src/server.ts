@@ -1,48 +1,69 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { TtlCache } from './cache.js';
 import type { RectoClient } from './client.js';
+import {
+  DATE_LOCALE,
+  DEFAULT_LIST_LIMIT,
+  ENTRY_SNIPPET_LENGTH,
+  MCP_SERVER_NAME,
+  PROMPT_NAMES,
+} from './constants.js';
+import type { JournalEntry } from './types.js';
+
+function findPackageVersion(): string {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 5; i++) {
+    const candidate = join(dir, 'package.json');
+    if (existsSync(candidate)) {
+      const pkg = JSON.parse(readFileSync(candidate, 'utf-8')) as {
+        name?: string;
+        version?: string;
+      };
+      if (pkg.name === '@recto/mcp') return pkg.version ?? '0.0.0';
+    }
+    dir = dirname(dir);
+  }
+  return '0.0.0';
+}
+
+const pkgVersion = findPackageVersion();
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+  return new Date(iso).toLocaleDateString(DATE_LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 }
 
-function formatEntry(entry: Record<string, unknown>): string {
-  const date = formatDate(entry.created_at as string);
+function formatEntry(entry: JournalEntry): string {
+  const date = formatDate(entry.created_at);
   const title = entry.title ? `${entry.title}` : 'Untitled';
-  const tags =
-    Array.isArray(entry.tags) && entry.tags.length > 0 ? ` [${entry.tags.join(', ')}]` : '';
+  const tags = entry.tags && entry.tags.length > 0 ? ` [${entry.tags.join(', ')}]` : '';
   const mood = entry.mood ? ` — mood: ${entry.mood}` : '';
   const snippet =
-    typeof entry.content === 'string'
-      ? entry.content.length > 200
-        ? `${entry.content.slice(0, 200)}…`
-        : entry.content
-      : '';
+    entry.content.length > ENTRY_SNIPPET_LENGTH
+      ? `${entry.content.slice(0, ENTRY_SNIPPET_LENGTH)}…`
+      : entry.content;
 
   return `**${title}** (${date})${tags}${mood}\n${snippet}`;
+}
+
+function textResponse(text: string) {
+  return { content: [{ type: 'text' as const, text }] };
 }
 
 export function createMcpServer(client: RectoClient, instructions: string): McpServer {
   const promptsCache = new TtlCache(() => client.getPrompts());
 
-  const server = new McpServer({ name: 'recto', version: '0.1.0' }, { instructions });
+  const server = new McpServer({ name: MCP_SERVER_NAME, version: pkgVersion }, { instructions });
 
   // --- MCP Prompts ---
-  const promptNames = [
-    'daily-checkin',
-    'weekly-review',
-    'monthly-retrospective',
-    'gratitude',
-    'idea-capture',
-    'goal-setting',
-  ];
-
-  for (const name of promptNames) {
+  for (const name of PROMPT_NAMES) {
     server.registerPrompt(name, { description: `Journaling prompt: ${name}` }, async () => {
       const { data } = await promptsCache.get();
       const prompt = data.find((p) => p.name === name);
@@ -73,15 +94,16 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async (args) => {
-      const entry = await client.createEntry(args);
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Journal entry created (ID: ${entry.id}).\n\n${formatEntry(entry)}\n\nAI enrichment will add title, tags, mood, and people in the background if configured.`,
-          },
-        ],
-      };
+      try {
+        const entry = await client.createEntry(args);
+        return textResponse(
+          `Journal entry created (ID: ${entry.id}).\n\n${formatEntry(entry)}\n\nAI enrichment will add title, tags, mood, and people in the background if configured.`,
+        );
+      } catch (error) {
+        return textResponse(
+          `Failed to create entry: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
     },
   );
 
@@ -96,15 +118,14 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async ({ id }) => {
-      const entry = await client.getEntry(id);
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: formatEntry(entry),
-          },
-        ],
-      };
+      try {
+        const entry = await client.getEntry(id);
+        return textResponse(formatEntry(entry));
+      } catch (error) {
+        return textResponse(
+          `Failed to get entry: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
     },
   );
 
@@ -123,22 +144,28 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async (args) => {
-      const result = await client.listEntries({
-        limit: args.limit ?? 10,
-        tag: args.tag,
-        from: args.from,
-        to: args.to,
-        people: args.people,
-      });
+      try {
+        const result = await client.listEntries({
+          limit: args.limit ?? DEFAULT_LIST_LIMIT,
+          tag: args.tag,
+          from: args.from,
+          to: args.to,
+          people: args.people,
+        });
 
-      if (result.data.length === 0) {
-        return { content: [{ type: 'text' as const, text: 'No entries found.' }] };
+        if (result.data.length === 0) {
+          return textResponse('No entries found.');
+        }
+
+        const formatted = result.data.map((e) => formatEntry(e)).join('\n\n---\n\n');
+        const footer = result.has_more ? '\n\n_(More entries available)_' : '';
+
+        return textResponse(`${formatted}${footer}`);
+      } catch (error) {
+        return textResponse(
+          `Failed to list entries: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
-
-      const formatted = result.data.map((e) => formatEntry(e)).join('\n\n---\n\n');
-      const footer = result.has_more ? '\n\n_(More entries available)_' : '';
-
-      return { content: [{ type: 'text' as const, text: `${formatted}${footer}` }] };
     },
   );
 
@@ -158,33 +185,34 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async (args) => {
-      const result = await client.search({
-        q: args.query,
-        mode: args.mode,
-        limit: args.limit ?? 10,
-      });
+      try {
+        const result = await client.search({
+          q: args.query,
+          mode: args.mode,
+          limit: args.limit ?? DEFAULT_LIST_LIMIT,
+        });
 
-      if (result.results.length === 0) {
-        return { content: [{ type: 'text' as const, text: 'No matching entries found.' }] };
+        if (result.results.length === 0) {
+          return textResponse('No matching entries found.');
+        }
+
+        const formatted = result.results
+          .map((r) => {
+            const entry = formatEntry(r.entry);
+            const highlights =
+              r.highlights && r.highlights.length > 0 ? `\n> ${r.highlights[0]}` : '';
+            return `${entry}${highlights}`;
+          })
+          .join('\n\n---\n\n');
+
+        return textResponse(
+          `Found ${result.total} results (mode: ${result.mode_used}):\n\n${formatted}`,
+        );
+      } catch (error) {
+        return textResponse(
+          `Failed to search entries: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
-
-      const formatted = result.results
-        .map((r) => {
-          const entry = formatEntry(r.entry);
-          const highlights =
-            r.highlights && r.highlights.length > 0 ? `\n> ${r.highlights[0]}` : '';
-          return `${entry}${highlights}`;
-        })
-        .join('\n\n---\n\n');
-
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Found ${result.total} results (mode: ${result.mode_used}):\n\n${formatted}`,
-          },
-        ],
-      };
     },
   );
 
@@ -203,20 +231,24 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async (args) => {
-      const result = await client.reflect({
-        query: args.query,
-        from_date: args.from,
-        to_date: args.to,
-      });
+      try {
+        const result = await client.reflect({
+          query: args.query,
+          from_date: args.from,
+          to_date: args.to,
+        });
 
-      const entriesInfo =
-        result.entries_used.length > 0
-          ? `\n\n_Based on ${result.entries_used.length} entries from ${formatDate(result.period.from)} to ${formatDate(result.period.to)}_`
-          : '';
+        const entriesInfo =
+          result.entries_used.length > 0
+            ? `\n\n_Based on ${result.entries_used.length} entries from ${formatDate(result.period.from)} to ${formatDate(result.period.to)}_`
+            : '';
 
-      return {
-        content: [{ type: 'text' as const, text: `${result.reflection}${entriesInfo}` }],
-      };
+        return textResponse(`${result.reflection}${entriesInfo}`);
+      } catch (error) {
+        return textResponse(
+          `Failed to reflect: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
     },
   );
 
@@ -232,11 +264,15 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async ({ id, tags }) => {
-      const entry = await client.addTags(id, tags);
-      const allTags = Array.isArray(entry.tags) ? entry.tags.join(', ') : 'none';
-      return {
-        content: [{ type: 'text' as const, text: `Tags updated. Entry now has tags: ${allTags}` }],
-      };
+      try {
+        const entry = await client.addTags(id, tags);
+        const allTags = entry.tags ? entry.tags.join(', ') : 'none';
+        return textResponse(`Tags updated. Entry now has tags: ${allTags}`);
+      } catch (error) {
+        return textResponse(
+          `Failed to add tags: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
     },
   );
 
@@ -256,25 +292,26 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async (args) => {
-      const query =
-        args.style === 'detailed'
-          ? 'Give a detailed summary of my journal entries from this period, including key events, emotions, and themes.'
-          : 'Briefly summarize my journal entries from this period.';
+      try {
+        const query =
+          args.style === 'detailed'
+            ? 'Give a detailed summary of my journal entries from this period, including key events, emotions, and themes.'
+            : 'Briefly summarize my journal entries from this period.';
 
-      const result = await client.reflect({
-        query,
-        from_date: args.from,
-        to_date: args.to,
-      });
+        const result = await client.reflect({
+          query,
+          from_date: args.from,
+          to_date: args.to,
+        });
 
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `**Summary (${formatDate(args.from)} — ${formatDate(args.to)})**\n\n${result.reflection}`,
-          },
-        ],
-      };
+        return textResponse(
+          `**Summary (${formatDate(args.from)} — ${formatDate(args.to)})**\n\n${result.reflection}`,
+        );
+      } catch (error) {
+        return textResponse(
+          `Failed to get summary: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
     },
   );
 
@@ -292,19 +329,18 @@ export function createMcpServer(client: RectoClient, instructions: string): McpS
       },
     },
     async (args) => {
-      await client.addMedia(args.entry_id, {
-        type: args.type,
-        url: args.url,
-        caption: args.caption,
-      });
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Media attached to entry ${args.entry_id}: ${args.type} — ${args.url}`,
-          },
-        ],
-      };
+      try {
+        await client.addMedia(args.entry_id, {
+          type: args.type,
+          url: args.url,
+          caption: args.caption,
+        });
+        return textResponse(`Media attached to entry ${args.entry_id}: ${args.type} — ${args.url}`);
+      } catch (error) {
+        return textResponse(
+          `Failed to add media: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+      }
     },
   );
 

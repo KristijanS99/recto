@@ -22,4 +22,6 @@ COPY --from=build /app/packages/mcp/dist ./packages/mcp/dist
 COPY packages/mcp/package.json ./packages/mcp/
 ENV MCP_PORT=3001
 EXPOSE 3001
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD node -e "fetch('http://localhost:3001/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
 CMD ["node", "packages/mcp/dist/index.js"]

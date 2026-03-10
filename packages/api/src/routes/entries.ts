@@ -1,8 +1,11 @@
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gt, lt, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
+import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
+import { findEntryById } from '../lib/db-helpers.js';
+import { badRequest, notFound } from '../lib/responses.js';
 import type { EnrichCallback } from '../services/enrichment.js';
 import {
   createEntrySchema,
@@ -10,6 +13,7 @@ import {
   encodeCursor,
   entryFiltersSchema,
   updateEntrySchema,
+  uuidParam,
 } from '../types.js';
 
 export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
@@ -33,7 +37,7 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     // Fire-and-forget enrichment
     if (onEnrich && entry) onEnrich(entry.id);
 
-    return c.json(entry, 201);
+    return c.json(entry, HTTP_STATUS.CREATED);
   });
 
   // GET /entries — List entries with filters and cursor pagination
@@ -45,7 +49,7 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     if (cursor) {
       const parsed = decodeCursor(cursor);
       if (!parsed) {
-        return c.json({ error: { code: 'BAD_REQUEST', message: 'Invalid cursor' } }, 400);
+        return badRequest(c, 'Invalid cursor');
       }
       // Keyset pagination: (created_at, id) < (cursor_created_at, cursor_id)
       conditions.push(
@@ -94,10 +98,12 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // GET /entries/:id — Get single entry
   app.get('/:id', async (c) => {
     const id = c.req.param('id');
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
+    const entry = await findEntryById(db, id);
 
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     return c.json(entry);
@@ -106,13 +112,15 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // PATCH /entries/:id — Update entry
   app.patch('/:id', zValidator('json', updateEntrySchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const body = c.req.valid('json');
 
     // If no fields to update, return the existing entry as-is
     if (Object.keys(body).length === 0) {
-      const [existing] = await db.select().from(entries).where(eq(entries.id, id));
+      const existing = await findEntryById(db, id);
       if (!existing) {
-        return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+        return notFound(c, 'Entry not found');
       }
       return c.json(existing);
     }
@@ -120,7 +128,7 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
     const [updated] = await db.update(entries).set(body).where(eq(entries.id, id)).returning();
 
     if (!updated) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     // Re-enrich if content changed
@@ -132,10 +140,12 @@ export function entriesRoutes(db: Database, onEnrich?: EnrichCallback) {
   // DELETE /entries/:id — Delete entry
   app.delete('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [deleted] = await db.delete(entries).where(eq(entries.id, id)).returning();
 
     if (!deleted) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     return c.json({ message: 'Entry deleted' });

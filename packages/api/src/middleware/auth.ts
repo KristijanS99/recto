@@ -1,28 +1,27 @@
-import { timingSafeEqual } from 'node:crypto';
 import { and, eq, gt } from 'drizzle-orm';
 import type { MiddlewareHandler } from 'hono';
+import { ERROR_CODE, HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { accessTokens } from '../db/schema.js';
+import { safeEqual } from '../lib/crypto.js';
 import { hashToken } from '../services/oauth.js';
-
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
-}
 
 export function authMiddleware(apiKey: string, db?: Database): MiddlewareHandler {
   return async (c, next) => {
     const header = c.req.header('Authorization');
     if (!header) {
       return c.json(
-        { error: { code: 'UNAUTHORIZED', message: 'Missing Authorization header' } },
-        401,
+        { error: { code: ERROR_CODE.UNAUTHORIZED, message: 'Missing Authorization header' } },
+        HTTP_STATUS.UNAUTHORIZED,
       );
     }
 
     const token = header.startsWith('Bearer ') ? header.slice(7) : null;
     if (!token) {
-      return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid API key' } }, 401);
+      return c.json(
+        { error: { code: ERROR_CODE.UNAUTHORIZED, message: 'Invalid API key' } },
+        HTTP_STATUS.UNAUTHORIZED,
+      );
     }
 
     // Fast path: static API key (timing-safe comparison)
@@ -47,6 +46,9 @@ export function authMiddleware(apiKey: string, db?: Database): MiddlewareHandler
       }
     }
 
-    return c.json({ error: { code: 'UNAUTHORIZED', message: 'Invalid API key' } }, 401);
+    return c.json(
+      { error: { code: ERROR_CODE.UNAUTHORIZED, message: 'Invalid API key' } },
+      HTTP_STATUS.UNAUTHORIZED,
+    );
   };
 }

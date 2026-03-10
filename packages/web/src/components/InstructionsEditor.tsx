@@ -1,6 +1,10 @@
 import { Loader2, RotateCcw, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useInstructions, useResetInstructions, useUpdateInstructions } from '../api/queries';
+import { useAutoResizeTextarea } from '../hooks/useAutoResizeTextarea';
+import { useFeedback } from '../hooks/useFeedback';
+import { ErrorMessage } from './ErrorMessage';
+import { FeedbackBanner } from './FeedbackBanner';
 import { SkeletonDetail } from './Skeleton';
 
 export function InstructionsEditor() {
@@ -10,34 +14,14 @@ export function InstructionsEditor() {
 
   const [content, setContent] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
+  const { feedback, setFeedback } = useFeedback();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (data) setContent(data.content);
   }, [data]);
 
-  useEffect(() => {
-    if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [feedback]);
-
-  function autoResize() {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = 'auto';
-      el.style.height = `${el.scrollHeight}px`;
-    }
-  }
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: content drives textarea height recalculation
-  useEffect(() => {
-    autoResize();
-  }, [content]);
+  useAutoResizeTextarea(textareaRef, content);
 
   const isDirty = data ? content !== data.content : false;
   const isSaving = updateMutation.isPending || resetMutation.isPending;
@@ -68,7 +52,7 @@ export function InstructionsEditor() {
   }
 
   if (isLoading) return <SkeletonDetail />;
-  if (isError) return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
+  if (isError) return <ErrorMessage error={error} />;
 
   return (
     <div className="animate-fade-in">
@@ -137,17 +121,7 @@ export function InstructionsEditor() {
         )}
       </div>
 
-      {feedback && (
-        <p
-          className={`text-sm mt-3 animate-fade-in ${
-            feedback.type === 'success'
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
-          }`}
-        >
-          {feedback.message}
-        </p>
-      )}
+      <FeedbackBanner feedback={feedback} className="mt-3" />
     </div>
   );
 }

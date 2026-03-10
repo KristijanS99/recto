@@ -1,26 +1,19 @@
 import { ChevronDown, ChevronRight, Loader2, RotateCcw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Prompt } from '../api/client';
 import { useDeletePrompt, useResetPrompt, useUpdatePrompt } from '../api/queries';
+import { useFeedback } from '../hooks/useFeedback';
+import { FeedbackBanner } from './FeedbackBanner';
 import { PromptForm } from './PromptForm';
 
 export function PromptCard({ prompt }: { prompt: Prompt }) {
   const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
+  const { feedback, setFeedback } = useFeedback();
 
   const updateMutation = useUpdatePrompt();
   const deleteMutation = useDeletePrompt();
   const resetMutation = useResetPrompt();
-
-  useEffect(() => {
-    if (feedback) {
-      const timer = setTimeout(() => setFeedback(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [feedback]);
 
   function showFeedback(type: 'success' | 'error', message: string) {
     setFeedback({ type, message });
@@ -148,17 +141,7 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
           </div>
         )}
 
-        {feedback && (
-          <p
-            className={`text-sm mt-3 animate-fade-in ${
-              feedback.type === 'success'
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400'
-            }`}
-          >
-            {feedback.message}
-          </p>
-        )}
+        <FeedbackBanner feedback={feedback} className="mt-3" />
       </div>
     </div>
   );

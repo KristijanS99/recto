@@ -1,3 +1,11 @@
+import type {
+  JournalEntry,
+  PaginatedResponse,
+  Prompt,
+  ReflectResponse,
+  SearchResponse,
+} from './types.js';
+
 export interface RectoClientConfig {
   apiUrl: string;
   apiKey: string;
@@ -32,7 +40,12 @@ export class RectoClient {
       headers: { ...this.headers, ...init?.headers },
     });
 
-    const body = await res.json();
+    let body: unknown;
+    try {
+      body = await res.json();
+    } catch {
+      throw new Error(`API returned invalid JSON (${res.status})`);
+    }
 
     if (!res.ok) {
       const msg = (body as { error?: { message?: string } })?.error?.message ?? res.statusText;
@@ -51,14 +64,14 @@ export class RectoClient {
     mood?: string;
     people?: string[];
   }) {
-    return this.request<Record<string, unknown>>('/entries', {
+    return this.request<JournalEntry>('/entries', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async getEntry(id: string) {
-    return this.request<Record<string, unknown>>(`/entries/${id}`);
+    return this.request<JournalEntry>(`/entries/${id}`);
   }
 
   async listEntries(params?: {
@@ -78,15 +91,11 @@ export class RectoClient {
     if (params?.people) query.set('people', params.people);
 
     const qs = query.toString();
-    return this.request<{
-      data: Record<string, unknown>[];
-      next_cursor: string | null;
-      has_more: boolean;
-    }>(`/entries${qs ? `?${qs}` : ''}`);
+    return this.request<PaginatedResponse<JournalEntry>>(`/entries${qs ? `?${qs}` : ''}`);
   }
 
   async updateEntry(id: string, data: Record<string, unknown>) {
-    return this.request<Record<string, unknown>>(`/entries/${id}`, {
+    return this.request<JournalEntry>(`/entries/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
@@ -101,7 +110,7 @@ export class RectoClient {
   // --- Tags ---
 
   async addTags(entryId: string, tags: string[]) {
-    return this.request<Record<string, unknown>>(`/entries/${entryId}/tags`, {
+    return this.request<JournalEntry>(`/entries/${entryId}/tags`, {
       method: 'POST',
       body: JSON.stringify({ tags }),
     });
@@ -110,7 +119,7 @@ export class RectoClient {
   // --- Media ---
 
   async addMedia(entryId: string, data: { type: string; url: string; caption?: string }) {
-    return this.request<Record<string, unknown>>(`/entries/${entryId}/media`, {
+    return this.request<JournalEntry>(`/entries/${entryId}/media`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -134,15 +143,7 @@ export class RectoClient {
     if (params.from) query.set('from', params.from);
     if (params.to) query.set('to', params.to);
 
-    return this.request<{
-      results: Array<{
-        entry: Record<string, unknown>;
-        score: number;
-        highlights?: string[];
-      }>;
-      mode_used: string;
-      total: number;
-    }>(`/search?${query.toString()}`);
+    return this.request<SearchResponse>(`/search?${query.toString()}`);
   }
 
   // --- Instructions ---
@@ -153,26 +154,14 @@ export class RectoClient {
 
   // --- Prompts ---
 
-  async getPrompts(): Promise<{
-    data: Array<{
-      id: string;
-      name: string;
-      description: string;
-      content: string;
-      is_default: boolean;
-    }>;
-  }> {
+  async getPrompts(): Promise<{ data: Prompt[] }> {
     return this.request('/prompts');
   }
 
   // --- Reflect ---
 
   async reflect(data: { query: string; from_date?: string; to_date?: string; limit?: number }) {
-    return this.request<{
-      reflection: string;
-      entries_used: Array<{ id: string; title: string | null; created_at: string }>;
-      period: { from: string; to: string };
-    }>('/reflect', {
+    return this.request<ReflectResponse>('/reflect', {
       method: 'POST',
       body: JSON.stringify(data),
     });

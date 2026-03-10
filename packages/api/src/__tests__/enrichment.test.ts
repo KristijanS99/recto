@@ -22,7 +22,7 @@ let client: ReturnType<typeof postgres>;
 // biome-ignore lint/suspicious/noExplicitAny: test helper
 let db: any;
 
-const TEST_API_KEY = 'test-api-key';
+const TEST_API_KEY = 'test-api-key-that-is-at-least-32-chars-long';
 const AUTH_HEADER = { Authorization: `Bearer ${TEST_API_KEY}` };
 
 const testConfig: Config = {

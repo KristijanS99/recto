@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { RectoClient } from './client.js';
+import { INSTRUCTIONS_CACHE_TTL_MS, JSON_RPC_ERROR_CODE, MCP_DEFAULT_PORT } from './constants.js';
 import { createMcpServer } from './server.js';
 
 const apiUrl = process.env.RECTO_API_URL;
@@ -9,18 +10,25 @@ if (!apiUrl) {
   process.exit(1);
 }
 
-const port = Number(process.env.MCP_PORT) || 3001;
+const port = Number(process.env.MCP_PORT) || MCP_DEFAULT_PORT;
 const baseClient = new RectoClient({ apiUrl, apiKey: '' });
 
 let cachedInstructions: { value: string; expiresAt: number } | null = null;
-const CACHE_TTL = 5 * 60 * 1000;
+
+function jsonRpcError(message: string): string {
+  return JSON.stringify({
+    jsonrpc: '2.0',
+    error: { code: JSON_RPC_ERROR_CODE, message },
+    id: null,
+  });
+}
 
 async function getInstructions(client: RectoClient): Promise<string> {
   if (cachedInstructions && Date.now() < cachedInstructions.expiresAt) {
     return cachedInstructions.value;
   }
   const data = await client.getInstructions();
-  cachedInstructions = { value: data.content, expiresAt: Date.now() + CACHE_TTL };
+  cachedInstructions = { value: data.content, expiresAt: Date.now() + INSTRUCTIONS_CACHE_TTL_MS };
   return data.content;
 }
 
@@ -35,26 +43,31 @@ createServer(async (req, res) => {
     return;
   }
 
+  if (req.url === '/health' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     res.writeHead(401, {
       'Content-Type': 'application/json',
       'WWW-Authenticate': 'Bearer',
     });
-    res.end(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        error: { code: -32000, message: 'Unauthorized' },
-        id: null,
-      }),
-    );
+    res.end(jsonRpcError('Unauthorized'));
     return;
   }
 
   const client = baseClient.withToken(authHeader.slice(7));
 
   if (req.url === '/mcp' && req.method === 'POST') {
-    const instructions = await getInstructions(client);
+    let instructions = '';
+    try {
+      instructions = await getInstructions(client);
+    } catch {
+      // Fall back to no custom instructions if API is unreachable
+    }
     const server = createMcpServer(client, instructions);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     await server.connect(transport);
@@ -65,16 +78,10 @@ createServer(async (req, res) => {
     });
   } else if (req.url === '/mcp' && (req.method === 'GET' || req.method === 'DELETE')) {
     res.writeHead(405);
-    res.end(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        error: { code: -32000, message: 'Method not allowed.' },
-        id: null,
-      }),
-    );
+    res.end(jsonRpcError('Method not allowed.'));
   } else {
     res.writeHead(404);
-    res.end('Not found');
+    res.end(jsonRpcError('Not found'));
   }
 }).listen(port, '0.0.0.0', () => {
   console.error(`Recto MCP server running on http://0.0.0.0:${port}/mcp`);

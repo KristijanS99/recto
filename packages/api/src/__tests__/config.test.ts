@@ -16,7 +16,7 @@ const ENV_KEYS = [
 
 function setMinimalEnv() {
   process.env.DATABASE_URL = 'http://localhost:5432/recto';
-  process.env.RECTO_API_KEY = 'test-key';
+  process.env.RECTO_API_KEY = 'test-key-that-is-at-least-32-characters';
 }
 
 function cleanEnv() {
@@ -47,7 +47,7 @@ describe('config', () => {
     const config = loadConfig();
 
     expect(config.DATABASE_URL).toBe('http://localhost:5432/recto');
-    expect(config.RECTO_API_KEY).toBe('test-key');
+    expect(config.RECTO_API_KEY).toBe('test-key-that-is-at-least-32-characters');
     expect(config.LLM_PROVIDER).toBe('none');
     expect(config.EMBEDDING_PROVIDER).toBe('none');
     expect(config.API_PORT).toBe(3000);
@@ -56,7 +56,7 @@ describe('config', () => {
   });
 
   it('exits on missing DATABASE_URL', async () => {
-    process.env.RECTO_API_KEY = 'test-key';
+    process.env.RECTO_API_KEY = 'test-key-that-is-at-least-32-characters';
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -64,6 +64,19 @@ describe('config', () => {
     loadConfig();
 
     expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('exits on RECTO_API_KEY shorter than 32 characters', async () => {
+    process.env.DATABASE_URL = 'http://localhost:5432/recto';
+    process.env.RECTO_API_KEY = 'short-key';
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { loadConfig } = await loadFreshModule();
+    loadConfig();
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('RECTO_API_KEY'));
   });
 
   it('exits on missing RECTO_API_KEY', async () => {

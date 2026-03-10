@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { ZodError } from 'zod';
 import type { Config } from './config.js';
+import { ERROR_CODE, HTTP_STATUS } from './constants.js';
 import type { Database } from './db/connection.js';
 import { createLogger } from './lib/logger.js';
 import { authMiddleware } from './middleware/auth.js';
@@ -33,14 +34,14 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
   // Global error handler
   app.onError((err, c) => {
     if (err instanceof HTTPException) {
-      return c.json({ error: { code: 'HTTP_ERROR', message: err.message } }, err.status);
+      return c.json({ error: { code: ERROR_CODE.HTTP_ERROR, message: err.message } }, err.status);
     }
 
     if (err instanceof ZodError) {
       return c.json(
         {
           error: {
-            code: 'VALIDATION_ERROR',
+            code: ERROR_CODE.VALIDATION_ERROR,
             message: 'Request validation failed',
             details: err.issues.map((i) => ({
               path: i.path.join('.'),
@@ -48,12 +49,15 @@ export function createApp(db: Database, config: Config, deps?: AppDeps) {
             })),
           },
         },
-        400,
+        HTTP_STATUS.BAD_REQUEST,
       );
     }
 
-    console.error('Unhandled error:', err);
-    return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500);
+    logger.error('Unhandled error', { error: String(err), stack: err.stack });
+    return c.json(
+      { error: { code: ERROR_CODE.INTERNAL, message: 'Internal server error' } },
+      HTTP_STATUS.INTERNAL,
+    );
   });
 
   // System routes (no auth)

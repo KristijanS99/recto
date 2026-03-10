@@ -1,10 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
+import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { prompts } from '../db/schema.js';
 import { DEFAULT_PROMPTS } from '../db/seed.js';
-import { createPromptSchema, updatePromptSchema } from '../types.js';
+import { badRequest, internalError, notFound } from '../lib/responses.js';
+import { createPromptSchema, updatePromptSchema, uuidParam } from '../types.js';
 
 export function promptsRoutes(db: Database) {
   const app = new Hono();
@@ -16,9 +18,11 @@ export function promptsRoutes(db: Database) {
 
   app.get('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [row] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!row) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Prompt not found' } }, 404);
+      return notFound(c, 'Prompt not found');
     }
     return c.json(row);
   });
@@ -29,15 +33,17 @@ export function promptsRoutes(db: Database) {
       .insert(prompts)
       .values({ ...body, isDefault: false })
       .returning();
-    return c.json(created, 201);
+    return c.json(created, HTTP_STATUS.CREATED);
   });
 
   app.put('/:id', zValidator('json', updatePromptSchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const body = c.req.valid('json');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Prompt not found' } }, 404);
+      return notFound(c, 'Prompt not found');
     }
     const [updated] = await db.update(prompts).set(body).where(eq(prompts.id, id)).returning();
     return c.json(updated);
@@ -45,20 +51,14 @@ export function promptsRoutes(db: Database) {
 
   app.delete('/:id', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Prompt not found' } }, 404);
+      return notFound(c, 'Prompt not found');
     }
     if (existing.isDefault) {
-      return c.json(
-        {
-          error: {
-            code: 'BAD_REQUEST',
-            message: 'Cannot delete a default prompt. Use reset instead.',
-          },
-        },
-        400,
-      );
+      return badRequest(c, 'Cannot delete a default prompt. Use reset instead.');
     }
     await db.delete(prompts).where(eq(prompts.id, id));
     return c.json({ message: 'Prompt deleted' });
@@ -66,24 +66,18 @@ export function promptsRoutes(db: Database) {
 
   app.post('/:id/reset', async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const [existing] = await db.select().from(prompts).where(eq(prompts.id, id));
     if (!existing) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Prompt not found' } }, 404);
+      return notFound(c, 'Prompt not found');
     }
     if (!existing.isDefault) {
-      return c.json(
-        {
-          error: {
-            code: 'BAD_REQUEST',
-            message: 'Only default prompts can be reset',
-          },
-        },
-        400,
-      );
+      return badRequest(c, 'Only default prompts can be reset');
     }
     const defaultData = DEFAULT_PROMPTS.find((p) => p.name === existing.name);
     if (!defaultData) {
-      return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Default data not found' } }, 500);
+      return internalError(c, 'Default data not found');
     }
     const [updated] = await db
       .update(prompts)

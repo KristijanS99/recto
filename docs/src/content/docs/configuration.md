@@ -17,7 +17,7 @@ Recto is configured entirely through environment variables. Copy `.env.example` 
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `RECTO_API_KEY` | API key for authenticating requests | *(required)* |
+| `RECTO_API_KEY` | API key for authenticating requests (min 32 characters) | *(required)* |
 
 ## AI Providers (LLM)
 
@@ -90,8 +90,8 @@ Used for MCP HTTP transport authentication. Only needed if you want OAuth instea
 DATABASE_URL=postgresql://recto:recto@localhost:5432/recto
 DB_PASSWORD=recto
 
-# Required
-RECTO_API_KEY=your-secret-key-here
+# Required (min 32 characters)
+RECTO_API_KEY=change-me-to-a-secret-key-at-least-32-chars
 
 # AI enrichment (pick one)
 LLM_PROVIDER=anthropic
@@ -106,8 +106,8 @@ OPENAI_API_KEY=sk-...
 # RECTO_ACCESS_TOKEN_TTL=3600
 # RECTO_REFRESH_TOKEN_TTL=7776000
 
-# Web dashboard
-VITE_RECTO_API_KEY=your-secret-key-here
+# Web dashboard (same value as RECTO_API_KEY)
+VITE_RECTO_API_KEY=change-me-to-a-secret-key-at-least-32-chars
 
 # Ports
 API_PORT=3000

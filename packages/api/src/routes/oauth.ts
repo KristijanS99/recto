@@ -1,10 +1,11 @@
-import { timingSafeEqual } from 'node:crypto';
 import { zValidator } from '@hono/zod-validator';
 import { and, eq, gt } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { AUTH_CODE_EXPIRY_MS, HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { accessTokens, authorizationCodes, oauthClients, refreshTokens } from '../db/schema.js';
+import { safeEqual } from '../lib/crypto.js';
 import {
   generateClientId,
   generateClientSecret,
@@ -14,17 +15,47 @@ import {
 } from '../services/oauth.js';
 import { renderAuthorizePage } from '../templates/authorize.js';
 
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
-}
-
 export interface OAuthRoutesConfig {
   issuerUrl: string;
   db?: Database;
   apiKey?: string;
   accessTokenTtl?: number;
   refreshTokenTtl?: number;
+}
+
+// ---------------------------------------------------------------------------
+// File-level constants
+// ---------------------------------------------------------------------------
+
+/** Default access token lifetime in seconds (1 hour) */
+const DEFAULT_ACCESS_TOKEN_TTL = 3600;
+
+/** Default refresh token lifetime in seconds (90 days) */
+const DEFAULT_REFRESH_TOKEN_TTL = 7_776_000;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Validates the client secret for confidential OAuth clients.
+ * Returns `true` when authentication succeeds (or is not required).
+ * Returns a string error description when authentication fails.
+ */
+function validateConfidentialClient(
+  client: { tokenEndpointAuthMethod: string; clientSecret: string | null },
+  providedSecret: string | undefined,
+): true | string {
+  if (client.tokenEndpointAuthMethod !== 'client_secret_post') {
+    return true;
+  }
+  if (!providedSecret || !client.clientSecret) {
+    return 'Client secret required';
+  }
+  if (hashToken(providedSecret) !== client.clientSecret) {
+    return 'Invalid client secret';
+  }
+  return true;
 }
 
 const redirectUriSchema = z
@@ -66,7 +97,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
   // RFC 7591 — Dynamic Client Registration
   app.post('/register', zValidator('json', registrationSchema), async (c) => {
     if (!config.db) {
-      return c.json({ error: 'Registration not available' }, 500);
+      return c.json({ error: 'Registration not available' }, HTTP_STATUS.INTERNAL);
     }
 
     const body = c.req.valid('json');
@@ -104,7 +135,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       response.client_secret = clientSecretPlain;
     }
 
-    return c.json(response, 201);
+    return c.json(response, HTTP_STATUS.CREATED);
   });
 
   // --------------------------------------------------------------------------
@@ -112,7 +143,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
   // --------------------------------------------------------------------------
   app.get('/authorize', async (c) => {
     if (!config.db) {
-      return c.json({ error: 'Authorization not available' }, 500);
+      return c.json({ error: 'Authorization not available' }, HTTP_STATUS.INTERNAL);
     }
 
     const responseType = c.req.query('response_type');
@@ -130,15 +161,18 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       !codeChallenge ||
       !codeChallengeMethod
     ) {
-      return c.json({ error: 'Missing required parameters' }, 400);
+      return c.json({ error: 'Missing required parameters' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     if (responseType !== 'code') {
-      return c.json({ error: 'Unsupported response_type' }, 400);
+      return c.json({ error: 'Unsupported response_type' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     if (codeChallengeMethod !== 'S256') {
-      return c.text('Bad Request: only S256 code_challenge_method is supported', 400);
+      return c.text(
+        'Bad Request: only S256 code_challenge_method is supported',
+        HTTP_STATUS.BAD_REQUEST,
+      );
     }
 
     const [client] = await config.db
@@ -148,11 +182,11 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       .limit(1);
 
     if (!client) {
-      return c.json({ error: 'Unknown client_id' }, 400);
+      return c.json({ error: 'Unknown client_id' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     if (!client.redirectUris.includes(redirectUri)) {
-      return c.json({ error: 'Invalid redirect_uri' }, 400);
+      return c.json({ error: 'Invalid redirect_uri' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     const html = renderAuthorizePage({
@@ -172,7 +206,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
   // --------------------------------------------------------------------------
   app.post('/authorize', async (c) => {
     if (!config.db) {
-      return c.json({ error: 'Authorization not available' }, 500);
+      return c.json({ error: 'Authorization not available' }, HTTP_STATUS.INTERNAL);
     }
 
     const body = await c.req.parseBody();
@@ -184,7 +218,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
     const apiKey = body.api_key as string | undefined;
 
     if (!clientId || !redirectUri || !state || !codeChallenge || !codeChallengeMethod) {
-      return c.json({ error: 'Missing required parameters' }, 400);
+      return c.json({ error: 'Missing required parameters' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     const [client] = await config.db
@@ -194,11 +228,11 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       .limit(1);
 
     if (!client) {
-      return c.json({ error: 'Unknown client_id' }, 400);
+      return c.json({ error: 'Unknown client_id' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     if (!client.redirectUris.includes(redirectUri)) {
-      return c.json({ error: 'Invalid redirect_uri' }, 400);
+      return c.json({ error: 'Invalid redirect_uri' }, HTTP_STATUS.BAD_REQUEST);
     }
 
     if (!apiKey || !config.apiKey || !safeEqual(apiKey, config.apiKey)) {
@@ -217,7 +251,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
     // Generate authorization code with 10-minute expiry
     const code = generateRandomToken();
     const hashedCode = hashToken(code);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + AUTH_CODE_EXPIRY_MS);
 
     await config.db.insert(authorizationCodes).values({
       code: hashedCode,
@@ -242,7 +276,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
     if (!config.db) {
       return c.json(
         { error: 'server_error', error_description: 'Token endpoint not available' },
-        500,
+        HTTP_STATUS.INTERNAL,
       );
     }
 
@@ -258,7 +292,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       if (!code || !codeVerifier || !clientId || !redirectUri) {
         return c.json(
           { error: 'invalid_request', error_description: 'Missing required parameters' },
-          400,
+          HTTP_STATUS.BAD_REQUEST,
         );
       }
 
@@ -278,7 +312,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       if (!authCode) {
         return c.json(
           { error: 'invalid_grant', error_description: 'Invalid or expired authorization code' },
-          400,
+          HTTP_STATUS.BAD_REQUEST,
         );
       }
 
@@ -286,11 +320,17 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       await config.db.delete(authorizationCodes).where(eq(authorizationCodes.id, authCode.id));
 
       if (authCode.clientId !== clientId) {
-        return c.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, 400);
+        return c.json(
+          { error: 'invalid_grant', error_description: 'Client ID mismatch' },
+          HTTP_STATUS.BAD_REQUEST,
+        );
       }
 
       if (authCode.redirectUri !== redirectUri) {
-        return c.json({ error: 'invalid_grant', error_description: 'Redirect URI mismatch' }, 400);
+        return c.json(
+          { error: 'invalid_grant', error_description: 'Redirect URI mismatch' },
+          HTTP_STATUS.BAD_REQUEST,
+        );
       }
 
       // Verify client secret for confidential clients
@@ -300,35 +340,37 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
         .where(eq(oauthClients.clientId, clientId))
         .limit(1);
 
-      if (oauthClient?.tokenEndpointAuthMethod === 'client_secret_post') {
-        const clientSecret = body.client_secret as string;
-        if (!clientSecret || !oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Client secret required' },
-            401,
-          );
-        }
-        if (hashToken(clientSecret) !== oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Invalid client secret' },
-            401,
-          );
-        }
+      if (!oauthClient) {
+        return c.json(
+          { error: 'invalid_client', error_description: 'Unknown client' },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
+      }
+
+      const secretResult = validateConfidentialClient(
+        oauthClient,
+        body.client_secret as string | undefined,
+      );
+      if (secretResult !== true) {
+        return c.json(
+          { error: 'invalid_client', error_description: secretResult },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
       }
 
       // Verify PKCE
       if (!verifyPkceChallenge(codeVerifier, authCode.codeChallenge)) {
         return c.json(
           { error: 'invalid_grant', error_description: 'PKCE verification failed' },
-          400,
+          HTTP_STATUS.BAD_REQUEST,
         );
       }
 
       // Generate tokens
       const accessTokenPlain = generateRandomToken();
       const refreshTokenPlain = generateRandomToken();
-      const accessTokenTtl = config.accessTokenTtl ?? 3600;
-      const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
+      const accessTokenTtl = config.accessTokenTtl ?? DEFAULT_ACCESS_TOKEN_TTL;
+      const refreshTokenTtl = config.refreshTokenTtl ?? DEFAULT_REFRESH_TOKEN_TTL;
 
       // Store access token
       const storedAccessRows = await config.db
@@ -343,7 +385,10 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
 
       const storedAccessToken = storedAccessRows[0];
       if (!storedAccessToken) {
-        return c.json({ error: 'server_error', error_description: 'Failed to store token' }, 500);
+        return c.json(
+          { error: 'server_error', error_description: 'Failed to store token' },
+          HTTP_STATUS.INTERNAL,
+        );
       }
 
       // Store refresh token linked to access token
@@ -369,7 +414,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       if (!refreshToken || !clientId) {
         return c.json(
           { error: 'invalid_request', error_description: 'Missing required parameters' },
-          400,
+          HTTP_STATUS.BAD_REQUEST,
         );
       }
 
@@ -384,12 +429,15 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       if (!storedRefresh) {
         return c.json(
           { error: 'invalid_grant', error_description: 'Invalid or expired refresh token' },
-          400,
+          HTTP_STATUS.BAD_REQUEST,
         );
       }
 
       if (storedRefresh.clientId !== clientId) {
-        return c.json({ error: 'invalid_grant', error_description: 'Client ID mismatch' }, 400);
+        return c.json(
+          { error: 'invalid_grant', error_description: 'Client ID mismatch' },
+          HTTP_STATUS.BAD_REQUEST,
+        );
       }
 
       // Verify client secret for confidential clients
@@ -399,20 +447,22 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
         .where(eq(oauthClients.clientId, clientId))
         .limit(1);
 
-      if (oauthClient?.tokenEndpointAuthMethod === 'client_secret_post') {
-        const clientSecret = body.client_secret as string;
-        if (!clientSecret || !oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Client secret required' },
-            401,
-          );
-        }
-        if (hashToken(clientSecret) !== oauthClient.clientSecret) {
-          return c.json(
-            { error: 'invalid_client', error_description: 'Invalid client secret' },
-            401,
-          );
-        }
+      if (!oauthClient) {
+        return c.json(
+          { error: 'invalid_client', error_description: 'Unknown client' },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
+      }
+
+      const secretResult = validateConfidentialClient(
+        oauthClient,
+        body.client_secret as string | undefined,
+      );
+      if (secretResult !== true) {
+        return c.json(
+          { error: 'invalid_client', error_description: secretResult },
+          HTTP_STATUS.UNAUTHORIZED,
+        );
       }
 
       // Delete old refresh token and old access token (rotation)
@@ -422,8 +472,8 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
       // Generate new tokens
       const newAccessTokenPlain = generateRandomToken();
       const newRefreshTokenPlain = generateRandomToken();
-      const accessTokenTtl = config.accessTokenTtl ?? 3600;
-      const refreshTokenTtl = config.refreshTokenTtl ?? 7776000;
+      const accessTokenTtl = config.accessTokenTtl ?? DEFAULT_ACCESS_TOKEN_TTL;
+      const refreshTokenTtl = config.refreshTokenTtl ?? DEFAULT_REFRESH_TOKEN_TTL;
 
       const newAccessRows = await config.db
         .insert(accessTokens)
@@ -437,7 +487,10 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
 
       const newStoredAccessToken = newAccessRows[0];
       if (!newStoredAccessToken) {
-        return c.json({ error: 'server_error', error_description: 'Failed to store token' }, 500);
+        return c.json(
+          { error: 'server_error', error_description: 'Failed to store token' },
+          HTTP_STATUS.INTERNAL,
+        );
       }
 
       await config.db.insert(refreshTokens).values({
@@ -457,7 +510,7 @@ export function oauthRoutes(config: OAuthRoutesConfig) {
 
     return c.json(
       { error: 'unsupported_grant_type', error_description: 'Unsupported grant type' },
-      400,
+      HTTP_STATUS.BAD_REQUEST,
     );
   });
 

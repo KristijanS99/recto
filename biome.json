@@ -59,7 +59,8 @@
       "!!**/pnpm-lock.yaml",
       "!!**/*.bundled_*.mjs",
       "!!**/.astro",
-      "!!**/.worktrees"
+      "!!**/.worktrees",
+      "!!**/.gitnexus"
     ]
   }
 }

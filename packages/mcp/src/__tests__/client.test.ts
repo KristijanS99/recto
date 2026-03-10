@@ -38,7 +38,7 @@ describe('RectoClient', () => {
       await client.getEntry('1');
       const init = mockFetch.mock.calls[0]![1] as RequestInit;
       const headers = init.headers as Record<string, string>;
-      expect(headers['Authorization']).toBe('Bearer my-secret');
+      expect(headers.Authorization).toBe('Bearer my-secret');
       expect(headers['Content-Type']).toBe('application/json');
     });
   });

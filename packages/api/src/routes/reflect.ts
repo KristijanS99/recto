@@ -2,8 +2,10 @@ import { zValidator } from '@hono/zod-validator';
 import { and, desc, gt, lt, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { MAX_CONTEXT_CHARS, MAX_ENTRY_WORDS, REFLECT_DEFAULT_LIMIT } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
+import { serviceUnavailable } from '../lib/responses.js';
 import type { LLMProvider } from '../services/llm.js';
 import { NullLLM } from '../services/llm.js';
 
@@ -11,11 +13,8 @@ const reflectSchema = z.object({
   query: z.string().min(1),
   from_date: z.iso.datetime().optional(),
   to_date: z.iso.datetime().optional(),
-  limit: z.number().int().min(1).max(50).default(20),
+  limit: z.number().int().min(1).max(50).default(REFLECT_DEFAULT_LIMIT),
 });
-
-const MAX_CONTEXT_CHARS = 16000; // ~4000 tokens
-const MAX_ENTRY_WORDS = 500;
 
 function truncateEntry(content: string): string {
   const words = content.split(/\s+/);
@@ -69,14 +68,9 @@ export function reflectRoutes(db: Database, llmProvider: LLMProvider) {
   app.post('/', zValidator('json', reflectSchema), async (c) => {
     // Check if LLM is available
     if (llmProvider instanceof NullLLM) {
-      return c.json(
-        {
-          error: {
-            code: 'SERVICE_UNAVAILABLE',
-            message: 'LLM provider not configured. Set LLM_PROVIDER to use reflections.',
-          },
-        },
-        503,
+      return serviceUnavailable(
+        c,
+        'LLM provider not configured. Set LLM_PROVIDER to use reflections.',
       );
     }
 

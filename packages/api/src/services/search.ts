@@ -1,6 +1,8 @@
 import { sql } from 'drizzle-orm';
+import { RRF_K } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { type Entry, entries } from '../db/schema.js';
+import type { KeywordSearchRow, SemanticSearchRow } from '../types.js';
 import type { EmbeddingProvider } from './embedding.js';
 
 export interface SearchResult {
@@ -27,7 +29,7 @@ interface RankedItem {
 // ---------------------------------------------------------------------------
 // RRF (Reciprocal Rank Fusion)
 // ---------------------------------------------------------------------------
-export function rrf(lists: RankedItem[][], k = 60): Map<string, number> {
+export function rrf(lists: RankedItem[][], k = RRF_K): Map<string, number> {
   const scores = new Map<string, number>();
   for (const list of lists) {
     for (let rank = 0; rank < list.length; rank++) {
@@ -87,10 +89,11 @@ export async function keywordSearch(db: Database, opts: SearchOptions): Promise<
     LIMIT ${opts.limit}
   `);
 
-  return (results as Record<string, unknown>[]).map((row) => ({
-    id: row.id as string,
+  const rows = results as unknown as KeywordSearchRow[];
+  return rows.map((row) => ({
+    id: row.id,
     score: Number(row.score),
-    highlights: row.headline ? [row.headline as string] : undefined,
+    highlights: row.headline ? [row.headline] : undefined,
   }));
 }
 
@@ -117,8 +120,9 @@ export async function semanticSearch(
     LIMIT ${opts.limit}
   `);
 
-  return (results as Record<string, unknown>[]).map((row) => ({
-    id: row.id as string,
+  const rows = results as unknown as SemanticSearchRow[];
+  return rows.map((row) => ({
+    id: row.id,
     score: Number(row.score),
   }));
 }

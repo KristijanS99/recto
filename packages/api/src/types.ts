@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import { DEFAULT_PAGE_LIMIT } from './constants.js';
+
+// --- UUID param validation ---
+export const uuidParam = z.string().uuid('Invalid UUID format');
 
 // --- Media ---
 export const mediaItemSchema = z.object({
@@ -29,7 +33,7 @@ export const updateEntrySchema = z.object({
 
 // --- Pagination ---
 export const paginationSchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(100).default(DEFAULT_PAGE_LIMIT),
   cursor: z.string().optional(),
 });
 
@@ -88,6 +92,18 @@ export const updatePromptSchema = z.object({
   description: z.string().min(1).optional(),
   content: z.string().min(1).optional(),
 });
+
+// --- Raw SQL row types for search queries ---
+export interface KeywordSearchRow {
+  id: string;
+  score: number;
+  headline: string;
+}
+
+export interface SemanticSearchRow {
+  id: string;
+  score: number;
+}
 
 // --- Error response shape ---
 export interface ErrorResponse {

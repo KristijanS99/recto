@@ -3,7 +3,9 @@ import { eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { Database } from '../db/connection.js';
 import { entries } from '../db/schema.js';
-import { addTagsSchema, removeTagsSchema } from '../types.js';
+import { findEntryById } from '../lib/db-helpers.js';
+import { badRequest, notFound } from '../lib/responses.js';
+import { addTagsSchema, removeTagsSchema, uuidParam } from '../types.js';
 
 export function tagsRoutes(db: Database) {
   const app = new Hono();
@@ -34,11 +36,13 @@ export function entryTagsRoutes(db: Database) {
   // POST /entries/:id/tags — Add tags to entry
   app.post('/:id/tags', zValidator('json', addTagsSchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const { tags } = c.req.valid('json');
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     const existingTags = entry.tags ?? [];
@@ -56,11 +60,13 @@ export function entryTagsRoutes(db: Database) {
   // DELETE /entries/:id/tags — Remove tags from entry
   app.delete('/:id/tags', zValidator('json', removeTagsSchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const { tags } = c.req.valid('json');
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     const existing = entry.tags ?? [];

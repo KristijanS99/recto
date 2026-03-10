@@ -1,20 +1,11 @@
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
 import { useEntry } from '../api/queries';
+import { ErrorMessage } from '../components/ErrorMessage';
 import { SkeletonDetail } from '../components/Skeleton';
 import { TagBadge } from '../components/TagBadge';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
+import { formatDateLong } from '../lib/format';
 
 export function EntryDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +16,7 @@ export function EntryDetail() {
 
   if (!id) return <p className="text-sand-500">Entry not found.</p>;
   if (isLoading) return <SkeletonDetail />;
-  if (isError) return <p className="text-red-600 dark:text-red-400">Error: {error.message}</p>;
+  if (isError) return <ErrorMessage error={error} />;
   if (!entry) return <p className="text-sand-500">Entry not found.</p>;
 
   return (
@@ -47,7 +38,7 @@ export function EntryDetail() {
           </h1>
 
           <time className="text-sm text-sand-500 dark:text-sand-400 block mb-4">
-            {formatDate(entry.createdAt)}
+            {formatDateLong(entry.createdAt)}
           </time>
 
           {/* Metadata */}

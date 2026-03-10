@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
@@ -8,13 +9,16 @@ import type { Config } from '../config.js';
 import * as schema from '../db/schema.js';
 import { entries } from '../db/schema.js';
 
+const require = createRequire(import.meta.url);
+const expectedVersion = (require('../../package.json') as { version: string }).version;
+
 let container: StartedPostgreSqlContainer;
 let client: ReturnType<typeof postgres>;
 // biome-ignore lint/suspicious/noExplicitAny: test helper
 let db: any;
 let app: ReturnType<typeof createApp>;
 
-const TEST_API_KEY = 'test-api-key';
+const TEST_API_KEY = 'test-api-key-that-is-at-least-32-chars-long';
 const AUTH_HEADER = { Authorization: `Bearer ${TEST_API_KEY}` };
 
 const testConfig: Config = {
@@ -110,7 +114,7 @@ describe('system routes', () => {
     const res = await req('/health');
     const body = await json(res);
     expect(body.status).toBe('ok');
-    expect(body.version).toBe('0.1.0');
+    expect(body.version).toBe(expectedVersion);
     expect(typeof body.uptime).toBe('number');
   });
 

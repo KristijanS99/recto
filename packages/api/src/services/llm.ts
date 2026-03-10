@@ -1,4 +1,8 @@
 import type { Config } from '../config.js';
+import { LLM_MAX_TOKENS_ENRICHMENT, LLM_MAX_TOKENS_REFLECT } from '../constants.js';
+import { createLogger } from '../lib/logger.js';
+
+const logger = createLogger('llm');
 
 export interface EnrichmentResult {
   title: string;
@@ -48,32 +52,42 @@ function parseEnrichmentResponse(text: string): EnrichmentResult {
 export class AnthropicLLM implements LLMProvider {
   constructor(private apiKey: string) {}
 
-  private async call(prompt: string, maxTokens = 512): Promise<string> {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': this.apiKey,
-        'content-type': 'application/json',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: maxTokens,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
+  private async call(prompt: string, maxTokens = LLM_MAX_TOKENS_ENRICHMENT): Promise<string> {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'content-type': 'application/json',
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: maxTokens,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Anthropic API failed (${res.status}): ${body}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => 'unknown');
+        throw new Error(`Anthropic API error (${res.status}): ${body}`);
+      }
+
+      const json = (await res.json().catch(() => {
+        throw new Error('Anthropic API returned invalid JSON');
+      })) as {
+        content: Array<{ type: string; text: string }>;
+      };
+      const textBlock = json.content.find((b) => b.type === 'text');
+      if (!textBlock) throw new Error('Anthropic API returned no text block');
+      return textBlock.text;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Anthropic API')) throw error;
+      logger.error('Anthropic LLM call failed', { error: String(error) });
+      throw new Error(
+        `Anthropic LLM call failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
-
-    const json = (await res.json()) as {
-      content: Array<{ type: string; text: string }>;
-    };
-    const textBlock = json.content.find((b) => b.type === 'text');
-    if (!textBlock) throw new Error('No text block in Anthropic response');
-    return textBlock.text;
   }
 
   async enrich(content: string): Promise<EnrichmentResult> {
@@ -82,7 +96,7 @@ export class AnthropicLLM implements LLMProvider {
   }
 
   async generate(prompt: string): Promise<string> {
-    return this.call(prompt, 1024);
+    return this.call(prompt, LLM_MAX_TOKENS_REFLECT);
   }
 }
 
@@ -95,47 +109,57 @@ export class OpenAILLM implements LLMProvider {
   private async call(
     userContent: string,
     systemContent?: string,
-    maxTokens = 512,
+    maxTokens = LLM_MAX_TOKENS_ENRICHMENT,
     jsonMode = false,
   ): Promise<string> {
-    const messages: Array<{ role: string; content: string }> = [];
-    if (systemContent) messages.push({ role: 'system', content: systemContent });
-    messages.push({ role: 'user', content: userContent });
+    try {
+      const messages: Array<{ role: string; content: string }> = [];
+      if (systemContent) messages.push({ role: 'system', content: systemContent });
+      messages.push({ role: 'user', content: userContent });
 
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        max_tokens: maxTokens,
-        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
-        messages,
-      }),
-    });
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: maxTokens,
+          ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+          messages,
+        }),
+      });
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`OpenAI API failed (${res.status}): ${body}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => 'unknown');
+        throw new Error(`OpenAI LLM API error (${res.status}): ${body}`);
+      }
+
+      const json = (await res.json().catch(() => {
+        throw new Error('OpenAI LLM API returned invalid JSON');
+      })) as {
+        choices: Array<{ message: { content: string } }>;
+      };
+      const message = json.choices[0]?.message?.content;
+      if (!message) throw new Error('OpenAI LLM API returned no content');
+      return message;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('OpenAI LLM')) throw error;
+      logger.error('OpenAI LLM call failed', { error: String(error) });
+      throw new Error(
+        `OpenAI LLM call failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
-
-    const json = (await res.json()) as {
-      choices: Array<{ message: { content: string } }>;
-    };
-    const message = json.choices[0]?.message?.content;
-    if (!message) throw new Error('No content in OpenAI response');
-    return message;
   }
 
   async enrich(content: string): Promise<EnrichmentResult> {
-    const text = await this.call(content, ENRICHMENT_PROMPT, 512, true);
+    const text = await this.call(content, ENRICHMENT_PROMPT, LLM_MAX_TOKENS_ENRICHMENT, true);
     return parseEnrichmentResponse(text);
   }
 
   async generate(prompt: string): Promise<string> {
-    return this.call(prompt, undefined, 1024);
+    return this.call(prompt, undefined, LLM_MAX_TOKENS_REFLECT);
   }
 }
 

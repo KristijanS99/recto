@@ -1,9 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
+import { HTTP_STATUS } from '../constants.js';
 import type { Database } from '../db/connection.js';
 import { entries, type MediaItem } from '../db/schema.js';
-import { addMediaSchema } from '../types.js';
+import { findEntryById } from '../lib/db-helpers.js';
+import { badRequest, notFound } from '../lib/responses.js';
+import { addMediaSchema, uuidParam } from '../types.js';
 
 export function mediaRoutes(db: Database) {
   const app = new Hono();
@@ -11,37 +14,41 @@ export function mediaRoutes(db: Database) {
   // POST /entries/:id/media — Add media reference
   app.post('/:id/media', zValidator('json', addMediaSchema), async (c) => {
     const id = c.req.param('id');
+    const parsed = uuidParam.safeParse(id);
+    if (!parsed.success) return badRequest(c, 'Invalid ID format');
     const mediaItem = c.req.valid('json');
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     const media = [...(entry.media ?? []), mediaItem as MediaItem];
 
     const [updated] = await db.update(entries).set({ media }).where(eq(entries.id, id)).returning();
 
-    return c.json(updated, 201);
+    return c.json(updated, HTTP_STATUS.CREATED);
   });
 
   // DELETE /entries/:id/media/:index — Remove media by index
   app.delete('/:id/media/:index', async (c) => {
     const id = c.req.param('id');
+    const parsedId = uuidParam.safeParse(id);
+    if (!parsedId.success) return badRequest(c, 'Invalid ID format');
     const index = Number.parseInt(c.req.param('index'), 10);
 
     if (Number.isNaN(index) || index < 0) {
-      return c.json({ error: { code: 'BAD_REQUEST', message: 'Invalid media index' } }, 400);
+      return badRequest(c, 'Invalid media index');
     }
 
-    const [entry] = await db.select().from(entries).where(eq(entries.id, id));
+    const entry = await findEntryById(db, id);
     if (!entry) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Entry not found' } }, 404);
+      return notFound(c, 'Entry not found');
     }
 
     const media = entry.media ?? [];
     if (index >= media.length) {
-      return c.json({ error: { code: 'NOT_FOUND', message: 'Media index out of range' } }, 404);
+      return notFound(c, 'Media index out of range');
     }
 
     const updated_media = media.filter((_, i) => i !== index);
