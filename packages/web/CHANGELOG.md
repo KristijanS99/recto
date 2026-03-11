@@ -1,5 +1,11 @@
 # @recto/web
 
+## 0.3.0
+
+### Minor Changes
+
+- 2fce516: Add Caddy reverse proxy with basic auth for web UI, remove nginx, consolidate deployment configuration, and overhaul all documentation with deployment guides, MCP client configs, and troubleshooting.
+
 ## 0.2.0
 
 ### Minor Changes
