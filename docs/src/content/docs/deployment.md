@@ -13,7 +13,7 @@ All traffic flows through Caddy on ports 80/443:
 | Path | Destination | Auth |
 |------|-------------|------|
 | `/mcp`, `/mcp/*` | MCP server | API key or OAuth |
-| `/api`, `/api/*` | REST API (strips `/api` prefix) | API key or OAuth |
+| `/api`, `/api/*` | REST API (strips `/api` prefix) | Basic auth (Caddy injects API key) |
 | `/.well-known/oauth-authorization-server` | API (OAuth discovery) | None |
 | `/authorize`, `/token`, `/register` | API (OAuth endpoints) | None |
 | `/*` | Web dashboard (static files) | Basic auth |
@@ -79,9 +79,9 @@ docker compose up -d --force-recreate api proxy
 
 The API (3000), MCP (3001), and database (5432) ports are exposed on the host for convenience. In production, **firewall these ports** so that all traffic goes through Caddy on ports 80/443. Only Caddy enforces basic auth for the web UI.
 
-### API key in the web bundle
+### API key injection
 
-The web dashboard's API key (`VITE_RECTO_API_KEY`) is baked into the JavaScript bundle at build time. Anyone who passes basic auth can see it in browser dev tools. This is acceptable for single-user self-hosted deployments but keep it in mind.
+The web dashboard's `/api` routes are behind basic auth. Caddy automatically injects the `RECTO_API_KEY` as a Bearer token when proxying requests to the API. The API key is never exposed to the browser.
 
 ### Disabling the web dashboard
 
@@ -127,16 +127,6 @@ The full `Caddyfile` should look like this:
 		reverse_proxy api:3000
 	}
 
-	handle /api {
-		uri strip_prefix /api
-		reverse_proxy api:3000
-	}
-
-	handle /api/* {
-		uri strip_prefix /api
-		reverse_proxy api:3000
-	}
-
 	handle {
 		respond 404
 	}
@@ -155,14 +145,14 @@ docker compose -f docker-compose.ghcr.yml up -d --scale web=0
 docker compose up -d --scale web=0
 ```
 
-You can also remove `VITE_RECTO_API_KEY`, `RECTO_WEB_USER`, and `RECTO_WEB_PASSWORD_HASH` from your `.env` since they are no longer used.
+You can also remove `RECTO_WEB_USER` and `RECTO_WEB_PASSWORD_HASH` from your `.env` since they are no longer used.
 
 **What you lose:** The web dashboard (timeline, search, tags, and settings pages). All MCP and API functionality continues to work normally.
 
-### Rebuilding after key changes
+### Changing the API key
 
-Since `VITE_RECTO_API_KEY` is a build-time variable, changing the API key requires rebuilding the web container:
+After updating `RECTO_API_KEY` in `.env`, restart the proxy to pick up the new value:
 
 ```bash
-docker compose up -d --build web proxy
+docker compose up -d --force-recreate proxy
 ```

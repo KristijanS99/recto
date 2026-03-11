@@ -72,13 +72,6 @@ Without an embedding provider, search falls back to BM25 full-text search only. 
 
 Set `CADDY_GLOBAL_OPTIONS=auto_https off` when running behind a TLS-terminating proxy (ngrok, Cloudflare, AWS ALB). See [Deployment](/recto/deployment) for details.
 
-## Web UI
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_RECTO_API_KEY` | API key for the web dashboard (same value as `RECTO_API_KEY`) | *(required for web)* |
-| `VITE_RECTO_API_URL` | API base URL for the web dashboard | `/api` |
-
 ## Web UI Auth
 
 Protects the web dashboard with HTTP basic auth when accessed through Caddy.
@@ -127,9 +120,6 @@ OPENAI_API_KEY=sk-...
 # Domain & proxy
 # RECTO_DOMAIN=localhost
 # CADDY_GLOBAL_OPTIONS=auto_https off
-
-# Web dashboard (same value as RECTO_API_KEY)
-VITE_RECTO_API_KEY=change-me-to-a-secret-key-at-least-32-chars
 
 # Web UI auth
 RECTO_WEB_USER=admin

@@ -25,20 +25,21 @@
 		reverse_proxy api:3000
 	}
 
-	handle /api {
-		uri strip_prefix /api
-		reverse_proxy api:3000
-	}
-
-	handle /api/* {
-		uri strip_prefix /api
-		reverse_proxy api:3000
-	}
-
 	handle {
 		basic_auth {
 			{$RECTO_WEB_USER:admin} {$RECTO_WEB_PASSWORD_HASH}
 		}
+
+		handle_path /api/* {
+			header_up Authorization "Bearer {$RECTO_API_KEY}"
+			reverse_proxy api:3000
+		}
+
+		handle_path /api {
+			header_up Authorization "Bearer {$RECTO_API_KEY}"
+			reverse_proxy api:3000
+		}
+
 		root * /srv/web
 		try_files {path} /index.html
 		file_server

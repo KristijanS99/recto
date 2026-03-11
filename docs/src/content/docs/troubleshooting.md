@@ -34,12 +34,12 @@ Then restart: `docker compose up -d --force-recreate proxy`
 
 **Symptom:** The web dashboard loads but shows errors. Browser console shows `401 Unauthorized` on `/api/` requests.
 
-**Cause:** `VITE_RECTO_API_KEY` was not set when the web container was built. Since it's a build-time variable, the API key is missing from the JavaScript bundle.
+**Cause:** `RECTO_API_KEY` is not set in the proxy environment, so Caddy cannot inject the Authorization header.
 
-**Fix:** Set `VITE_RECTO_API_KEY` in your `.env` (same value as `RECTO_API_KEY`) and rebuild:
+**Fix:** Ensure `RECTO_API_KEY` is set in your `.env` and restart the proxy:
 
 ```bash
-docker compose up -d --build web proxy
+docker compose up -d --force-recreate proxy
 ```
 
 ## Password hash not working

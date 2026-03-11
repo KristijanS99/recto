@@ -128,7 +128,7 @@ cd recto
 
 # Configure environment
 cp .env.example .env
-# Edit .env — set RECTO_API_KEY, VITE_RECTO_API_KEY, and generate a password hash:
+# Edit .env — set RECTO_API_KEY and generate a password hash:
 #   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'your-password'
 # Set RECTO_WEB_PASSWORD_HASH (escape $ as $$ in .env)
 

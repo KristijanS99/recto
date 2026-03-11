@@ -26,7 +26,6 @@ Edit `.env` and set these required values:
 | Variable | Description |
 |----------|-------------|
 | `RECTO_API_KEY` | Secret key for API auth (min 32 characters) |
-| `VITE_RECTO_API_KEY` | Same value as above (used by the web dashboard) |
 | `RECTO_WEB_PASSWORD_HASH` | Bcrypt hash for web UI login (see below) |
 
 Generate the password hash:

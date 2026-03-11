@@ -69,12 +69,10 @@ export interface PromptsResponse {
   data: Prompt[];
 }
 
-const API_KEY = import.meta.env.VITE_RECTO_API_KEY as string | undefined;
 const BASE_URL = (import.meta.env.VITE_RECTO_API_URL as string | undefined) ?? '/api';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (API_KEY) headers.Authorization = `Bearer ${API_KEY}`;
 
   const res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
 
