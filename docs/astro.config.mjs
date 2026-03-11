@@ -12,9 +12,21 @@ export default defineConfig({
         src: './src/assets/logo.png',
       },
       head: [
-        { tag: 'meta', attrs: { property: 'og:image', content: 'https://kristijans99.github.io/recto/og-image.png' } },
+        {
+          tag: 'meta',
+          attrs: {
+            property: 'og:image',
+            content: 'https://kristijans99.github.io/recto/og-image.png',
+          },
+        },
         { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
-        { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://kristijans99.github.io/recto/og-image.png' } },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'twitter:image',
+            content: 'https://kristijans99.github.io/recto/og-image.png',
+          },
+        },
       ],
       components: {
         ThemeProvider: './src/components/ThemeProvider.astro',
