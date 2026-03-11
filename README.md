@@ -200,24 +200,38 @@ Then just start journaling by talking to your AI. It's that simple.
 
 ## Development
 
+### Prerequisites
+
+- Node.js >= 22
+- [pnpm](https://pnpm.io)
+- [Docker](https://docs.docker.com/get-docker/) (for the PostgreSQL database)
+
+### Setup
+
 ```bash
 # Install dependencies
 pnpm install
 
+# Copy environment config
+cp .env.example .env
+
+# Start the PostgreSQL database (pgvector)
+docker compose up -d db
+
 # Run all packages in dev mode
 pnpm dev
+```
 
-# Lint & format
-pnpm lint
+The `docker compose up -d db` command starts only the PostgreSQL container with pgvector. The API, MCP server, and web dashboard run natively via `pnpm dev` for hot-reload during development.
 
-# Type check
-pnpm typecheck
+### Commands
 
-# Run tests
-pnpm test
-
-# Build everything
-pnpm build
+```bash
+pnpm dev          # Run all packages in dev mode
+pnpm lint         # Lint & format
+pnpm typecheck    # Type check
+pnpm test         # Run tests
+pnpm build        # Build everything
 ```
 
 ---
