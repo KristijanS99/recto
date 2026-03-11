@@ -1,4 +1,5 @@
 import { resolve } from 'node:path';
+import { sql } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { createLogger } from '../lib/logger.js';
 import type { Database } from './connection.js';
@@ -9,6 +10,7 @@ const logger = createLogger('migrate');
 
 export async function runMigrations(db: Database) {
   logger.info('Running database migrations');
+  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS vector`);
   const migrationsFolder = resolve(import.meta.dirname, '..', 'drizzle');
   await migrate(db, { migrationsFolder });
   logger.info('Migrations complete');

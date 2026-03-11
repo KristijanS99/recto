@@ -22,7 +22,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://recto:${DB_PASSWORD:-recto}@db:5432/recto
-      RECTO_ISSUER_URL: ${RECTO_ISSUER_URL:-http://localhost}
+      RECTO_ISSUER_URL: https://${RECTO_DOMAIN:-localhost}
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:
@@ -48,6 +48,15 @@ services:
       timeout: 3s
       retries: 3
 
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+      args:
+        VITE_RECTO_API_KEY: ${VITE_RECTO_API_KEY}
+    volumes:
+      - web_dist:/srv
+
   proxy:
     image: caddy:2-alpine
     ports:
@@ -56,21 +65,21 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
+      - web_dist:/srv/web:ro
     depends_on:
-      - api
-      - mcp
+      web:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+      mcp:
+        condition: service_started
     environment:
       - RECTO_DOMAIN=${RECTO_DOMAIN:-localhost}
-
-  web:
-    build:
-      context: .
-      dockerfile: packages/web/Dockerfile
-    ports:
-      - "${WEB_PORT:-5173}:5173"
-    depends_on:
-      - api
+      - CADDY_GLOBAL_OPTIONS=${CADDY_GLOBAL_OPTIONS:-}
+      - RECTO_WEB_USER=${RECTO_WEB_USER:-admin}
+      - RECTO_WEB_PASSWORD_HASH=${RECTO_WEB_PASSWORD_HASH}
 
 volumes:
   postgres_data:
   caddy_data:
+  web_dist:

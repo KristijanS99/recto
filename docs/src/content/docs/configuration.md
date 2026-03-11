@@ -57,15 +57,20 @@ Auto-detected dimensions per provider:
 Without an embedding provider, search falls back to BM25 full-text search only. Hybrid search (combining keyword + semantic results) requires embeddings.
 :::
 
-## OAuth (optional)
-
-Used for MCP HTTP transport authentication. Only needed if you want OAuth instead of API key auth.
+## Domain & Proxy
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `RECTO_ISSUER_URL` | OAuth issuer URL | *(none)* |
-| `RECTO_ACCESS_TOKEN_TTL` | Access token TTL in seconds | `3600` |
-| `RECTO_REFRESH_TOKEN_TTL` | Refresh token TTL in seconds | `7776000` |
+| `RECTO_DOMAIN` | Domain for Caddy and OAuth issuer URL | `localhost` |
+| `CADDY_GLOBAL_OPTIONS` | Caddy global options (set to `auto_https off` behind a TLS proxy) | *(none)* |
+| `RECTO_ACCESS_TOKEN_TTL` | OAuth access token TTL in seconds | `3600` |
+| `RECTO_REFRESH_TOKEN_TTL` | OAuth refresh token TTL in seconds | `7776000` |
+
+`RECTO_DOMAIN` serves two purposes:
+- Caddy listens on this domain and provisions TLS certificates automatically
+- The OAuth issuer URL is derived as `https://<RECTO_DOMAIN>`
+
+Set `CADDY_GLOBAL_OPTIONS=auto_https off` when running behind a TLS-terminating proxy (ngrok, Cloudflare, AWS ALB). See [Deployment](/recto/deployment) for details.
 
 ## Web UI
 
@@ -74,13 +79,31 @@ Used for MCP HTTP transport authentication. Only needed if you want OAuth instea
 | `VITE_RECTO_API_KEY` | API key for the web dashboard (same value as `RECTO_API_KEY`) | *(required for web)* |
 | `VITE_RECTO_API_URL` | API base URL for the web dashboard | `/api` |
 
+## Web UI Auth
+
+Protects the web dashboard with HTTP basic auth when accessed through Caddy.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RECTO_WEB_USER` | Basic auth username | `admin` |
+| `RECTO_WEB_PASSWORD_HASH` | Bcrypt hash of the password | *(required)* |
+
+Generate the hash:
+
+```bash
+docker run --rm caddy:2-alpine caddy hash-password --plaintext 'your-password'
+```
+
+:::caution
+Bcrypt hashes contain `$` characters, which Docker Compose interprets as variable references. **Escape every `$` as `$$`** in your `.env` file.
+:::
+
 ## Ports
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `API_PORT` | API server port | `3000` |
 | `MCP_PORT` | MCP server port | `3001` |
-| `WEB_PORT` | Web dashboard port | `5173` |
 | `DB_PORT` | PostgreSQL port | `5432` |
 
 ## Example `.env`
@@ -101,17 +124,19 @@ ANTHROPIC_API_KEY=sk-ant-...
 EMBEDDING_PROVIDER=openai
 OPENAI_API_KEY=sk-...
 
-# OAuth (optional — only if using OAuth instead of API key)
-# RECTO_ISSUER_URL=https://auth.example.com
-# RECTO_ACCESS_TOKEN_TTL=3600
-# RECTO_REFRESH_TOKEN_TTL=7776000
+# Domain & proxy
+# RECTO_DOMAIN=localhost
+# CADDY_GLOBAL_OPTIONS=auto_https off
 
 # Web dashboard (same value as RECTO_API_KEY)
 VITE_RECTO_API_KEY=change-me-to-a-secret-key-at-least-32-chars
 
+# Web UI auth
+RECTO_WEB_USER=admin
+RECTO_WEB_PASSWORD_HASH=$$2a$$14$$...your-hash-here...
+
 # Ports
 API_PORT=3000
 MCP_PORT=3001
-WEB_PORT=5173
 DB_PORT=5432
 ```

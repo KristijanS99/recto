@@ -1,3 +1,5 @@
+{$CADDY_GLOBAL_OPTIONS}
+
 {$RECTO_DOMAIN:localhost} {
 	handle /mcp {
 		reverse_proxy mcp:3001
@@ -7,7 +9,38 @@
 		reverse_proxy mcp:3001
 	}
 
-	handle {
+	handle /.well-known/oauth-authorization-server {
 		reverse_proxy api:3000
+	}
+
+	handle /authorize {
+		reverse_proxy api:3000
+	}
+
+	handle /token {
+		reverse_proxy api:3000
+	}
+
+	handle /register {
+		reverse_proxy api:3000
+	}
+
+	handle /api {
+		uri strip_prefix /api
+		reverse_proxy api:3000
+	}
+
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy api:3000
+	}
+
+	handle {
+		basic_auth {
+			{$RECTO_WEB_USER:admin} {$RECTO_WEB_PASSWORD_HASH}
+		}
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
 	}
 }
