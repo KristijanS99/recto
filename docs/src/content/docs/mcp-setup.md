@@ -68,11 +68,12 @@ The general pattern:
 
 **Client-specific notes:**
 
-| Client | Config field for URL | Config location |
-|--------|---------------------|-----------------|
-| Cursor | `url` | `.cursor/mcp.json` or global settings |
-| Claude Code | CLI flag | `claude mcp add recto --transport http https://<your-domain>/mcp` |
-| Antigravity | `serverUrl` | MCP settings JSON |
+| Client | Config field for URL | Auth methods | Config location |
+|--------|---------------------|--------------|-----------------|
+| Cursor | `url` | API key | `.cursor/mcp.json` or global settings |
+| Claude Code | CLI flag | API key, OAuth | `claude mcp add recto --transport http https://<your-domain>/mcp` |
+| Claude Desktop | `url` | OAuth | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Antigravity | `serverUrl` | API key, OAuth | MCP settings JSON |
 
 Example for **Cursor** (`.cursor/mcp.json`):
 
@@ -80,7 +81,7 @@ Example for **Cursor** (`.cursor/mcp.json`):
 {
   "mcpServers": {
     "recto": {
-      "url": "https://localhost/mcp",
+      "url": "https://your-domain.com/mcp",
       "headers": {
         "Authorization": "Bearer your-api-key"
       }
@@ -89,27 +90,28 @@ Example for **Cursor** (`.cursor/mcp.json`):
 }
 ```
 
-Example for **Antigravity**:
+Example for **Antigravity** (API key):
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "serverUrl": "https://localhost/mcp",
+      "serverUrl": "https://your-domain.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key",
-        "Content-Type": "application/json"
+        "Authorization": "Bearer your-api-key"
       }
     }
   }
 }
 ```
 
-### OAuth Auth (Claude Desktop)
+### OAuth Auth
 
-Claude Desktop uses OAuth 2.1 with PKCE for MCP authentication. You don't need to configure tokens manually — Claude handles the OAuth flow automatically.
+Several MCP clients support OAuth 2.1 with PKCE, so you don't need to configure tokens manually — the client handles the OAuth flow automatically. When connecting, the client opens a browser where you enter your `RECTO_API_KEY` to authorize.
 
-1. Add Recto to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+#### Claude Desktop
+
+Add Recto to your config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
@@ -121,14 +123,43 @@ Claude Desktop uses OAuth 2.1 with PKCE for MCP authentication. You don't need t
 }
 ```
 
-2. When Claude connects, it will:
-   - Discover OAuth endpoints at `/.well-known/oauth-authorization-server`
-   - Open a consent screen in your browser
-   - Ask you to enter your `RECTO_API_KEY` to authorize
-   - Exchange the authorization for access and refresh tokens
+#### Claude Code
+
+Just provide the URL — no headers needed:
+
+```bash
+claude mcp add recto --transport http https://your-domain.com/mcp
+```
+
+Claude Code will automatically discover the OAuth endpoints and open a browser for authorization.
+
+#### Antigravity
+
+Only the `serverUrl` is needed — no headers:
+
+```json
+{
+  "mcpServers": {
+    "recto": {
+      "serverUrl": "https://your-domain.com/mcp"
+    }
+  }
+}
+```
+
+Antigravity will prompt you to open the browser for OAuth authorization.
+
+#### How it works
+
+When a client connects without a Bearer token, Recto's OAuth flow kicks in:
+
+1. The client discovers OAuth endpoints at `/.well-known/oauth-authorization-server`
+2. A consent screen opens in your browser
+3. You enter your `RECTO_API_KEY` to authorize
+4. The client exchanges the authorization for access and refresh tokens
 
 :::caution
-OAuth requires a **publicly trusted HTTPS certificate**. Self-signed certificates (like Caddy's localhost cert) won't work with Claude Desktop. For testing, use a tunnel like [ngrok](https://ngrok.com): `ngrok http 80`. See [Deployment](/recto/deployment) for production setup.
+OAuth requires a **publicly trusted HTTPS certificate**. Self-signed certificates (like Caddy's localhost cert) won't work. For testing, use a tunnel like [ngrok](https://ngrok.com): `ngrok http 80`. See [Deployment](/recto/deployment) for production setup.
 :::
 
 ## Verify the Server
