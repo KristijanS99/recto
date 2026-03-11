@@ -25,23 +25,28 @@
 		reverse_proxy api:3000
 	}
 
+	handle_path /api/* {
+		basic_auth {
+			{$RECTO_WEB_USER:admin} {$RECTO_WEB_PASSWORD_HASH}
+		}
+		reverse_proxy api:3000 {
+			header_up Authorization "Bearer {$RECTO_API_KEY}"
+		}
+	}
+
+	handle_path /api {
+		basic_auth {
+			{$RECTO_WEB_USER:admin} {$RECTO_WEB_PASSWORD_HASH}
+		}
+		reverse_proxy api:3000 {
+			header_up Authorization "Bearer {$RECTO_API_KEY}"
+		}
+	}
+
 	handle {
 		basic_auth {
 			{$RECTO_WEB_USER:admin} {$RECTO_WEB_PASSWORD_HASH}
 		}
-
-		handle_path /api/* {
-			reverse_proxy api:3000 {
-				header_up Authorization "Bearer {$RECTO_API_KEY}"
-			}
-		}
-
-		handle_path /api {
-			reverse_proxy api:3000 {
-				header_up Authorization "Bearer {$RECTO_API_KEY}"
-			}
-		}
-
 		root * /srv/web
 		try_files {path} /index.html
 		file_server
