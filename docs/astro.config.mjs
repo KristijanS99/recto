@@ -16,7 +16,7 @@ export default defineConfig({
           tag: 'meta',
           attrs: {
             property: 'og:image',
-            content: 'https://kristijans99.github.io/recto/og-image.png',
+            content: 'https://kristijans99.github.io/recto/og-image.jpg',
           },
         },
         { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
@@ -24,7 +24,7 @@ export default defineConfig({
           tag: 'meta',
           attrs: {
             name: 'twitter:image',
-            content: 'https://kristijans99.github.io/recto/og-image.png',
+            content: 'https://kristijans99.github.io/recto/og-image.jpg',
           },
         },
       ],
