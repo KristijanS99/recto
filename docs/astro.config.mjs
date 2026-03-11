@@ -28,8 +28,10 @@ export default defineConfig({
           items: [
             { label: 'Getting Started', slug: 'getting-started' },
             { label: 'Configuration', slug: 'configuration' },
+            { label: 'Deployment', slug: 'deployment' },
             { label: 'MCP Setup', slug: 'mcp-setup' },
             { label: 'Instructions & Prompts', slug: 'instructions-and-prompts' },
+            { label: 'Troubleshooting', slug: 'troubleshooting' },
           ],
         },
       ],

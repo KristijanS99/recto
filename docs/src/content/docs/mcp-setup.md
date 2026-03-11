@@ -42,19 +42,22 @@ You can also create custom prompts via the REST API or the web dashboard's Setti
 
 ## Connecting Your AI Client
 
-Recto's MCP server uses Streamable HTTP transport. All clients connect via URL with a Bearer token (your `RECTO_API_KEY` or an OAuth access token).
+Recto's MCP server uses **Streamable HTTP** transport. There are two authentication methods:
 
-**Default endpoint:** `http://localhost:3001/mcp` (configurable via `MCP_PORT`)
+- **API key** — pass your `RECTO_API_KEY` as a Bearer token (simplest setup)
+- **OAuth 2.1** — the client handles authorization automatically (required by Claude Desktop)
 
-### Claude Desktop
+### API Key Auth
 
-Add to your Claude Desktop MCP configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+Most MCP clients accept a URL and custom headers. Pass your API key as a Bearer token in the `Authorization` header.
+
+The general pattern:
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "url": "http://localhost:3001/mcp",
+      "url": "https://<your-domain>/mcp",
       "headers": {
         "Authorization": "Bearer your-api-key"
       }
@@ -63,21 +66,21 @@ Add to your Claude Desktop MCP configuration (`~/Library/Application Support/Cla
 }
 ```
 
-### Claude Code
+**Client-specific notes:**
 
-```bash
-claude mcp add recto --transport http http://localhost:3001/mcp
-```
+| Client | Config field for URL | Config location |
+|--------|---------------------|-----------------|
+| Cursor | `url` | `.cursor/mcp.json` or global settings |
+| Claude Code | CLI flag | `claude mcp add recto --transport http https://<your-domain>/mcp` |
+| Antigravity | `serverUrl` | MCP settings JSON |
 
-### Cursor
-
-Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or global settings):
+Example for **Cursor** (`.cursor/mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "url": "http://localhost:3001/mcp",
+      "url": "https://localhost/mcp",
       "headers": {
         "Authorization": "Bearer your-api-key"
       }
@@ -86,26 +89,51 @@ Add to your Cursor MCP configuration (`.cursor/mcp.json` in your project or glob
 }
 ```
 
-### Other HTTP-capable clients
-
-Most MCP clients that support Streamable HTTP accept a `url` or `serverUrl` field:
+Example for **Antigravity**:
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "url": "http://localhost:3001/mcp",
+      "serverUrl": "https://localhost/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key"
+        "Authorization": "Bearer your-api-key",
+        "Content-Type": "application/json"
       }
     }
   }
 }
 ```
+
+### OAuth Auth (Claude Desktop)
+
+Claude Desktop uses OAuth 2.1 with PKCE for MCP authentication. You don't need to configure tokens manually — Claude handles the OAuth flow automatically.
+
+1. Add Recto to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "recto": {
+      "url": "https://your-domain.com/mcp"
+    }
+  }
+}
+```
+
+2. When Claude connects, it will:
+   - Discover OAuth endpoints at `/.well-known/oauth-authorization-server`
+   - Open a consent screen in your browser
+   - Ask you to enter your `RECTO_API_KEY` to authorize
+   - Exchange the authorization for access and refresh tokens
+
+:::caution
+OAuth requires a **publicly trusted HTTPS certificate**. Self-signed certificates (like Caddy's localhost cert) won't work with Claude Desktop. For testing, use a tunnel like [ngrok](https://ngrok.com): `ngrok http 80`. See [Deployment](/recto/deployment) for production setup.
+:::
 
 ## Verify the Server
 
-Before testing with your AI client, confirm the MCP server is running:
+Confirm the MCP server is running:
 
 ```bash
 curl http://localhost:3001/health
@@ -119,4 +147,4 @@ After configuring, test by asking your AI assistant:
 
 > "Create a journal entry about setting up Recto for the first time."
 
-If the entry is created successfully, you're all set. Check the web dashboard at [http://localhost:5173](http://localhost:5173) to see it.
+If the entry is created successfully, you're all set. Check the web dashboard at [https://localhost](https://localhost) to see it.

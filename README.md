@@ -128,29 +128,30 @@ cd recto
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your API key and optional AI provider keys
+# Edit .env — set RECTO_API_KEY, VITE_RECTO_API_KEY, and generate a password hash:
+#   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'your-password'
+# Set RECTO_WEB_PASSWORD_HASH (escape $ as $$ in .env)
 
 # Start everything with Docker
 docker compose up -d
 
 # Recto is now running:
-#   API:           http://localhost:3000
-#   MCP server:    http://localhost:3001/mcp
-#   Web dashboard: http://localhost:5173
-#   Reverse proxy: http://localhost (port 80, via Caddy)
+#   Web dashboard: https://localhost (basic auth protected)
+#   API:           https://localhost/api
+#   MCP server:    https://localhost/mcp
 ```
 
 ### Connect your AI assistant
 
-Add Recto as an MCP server in your assistant's config.
+Add Recto as an MCP server in your assistant's config. Recto uses Streamable HTTP transport — all clients connect via URL.
 
-**Claude Desktop** (`claude_desktop_config.json`):
+**With API key auth** (Cursor, Claude Code, and most MCP clients):
 
 ```json
 {
   "mcpServers": {
     "recto": {
-      "url": "http://localhost:3001/mcp",
+      "url": "https://localhost/mcp",
       "headers": {
         "Authorization": "Bearer your-api-key"
       }
@@ -159,11 +160,23 @@ Add Recto as an MCP server in your assistant's config.
 }
 ```
 
-**Claude Code CLI:**
+> **Note:** Some clients use `serverUrl` instead of `url` (e.g., Antigravity). Check your client's docs.
 
-```bash
-claude mcp add recto --transport http http://localhost:3001/mcp
+**With OAuth** (Claude Desktop):
+
+Claude Desktop supports OAuth natively. Just add the MCP URL — it handles authorization automatically:
+
+```json
+{
+  "mcpServers": {
+    "recto": {
+      "url": "https://your-domain.com/mcp"
+    }
+  }
+}
 ```
+
+OAuth requires a publicly trusted HTTPS certificate. See the [deployment guide](https://kristijans99.github.io/recto/deployment) for setup details.
 
 Then just start journaling by talking to your AI. It's that simple.
 
