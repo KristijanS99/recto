@@ -31,13 +31,15 @@
 		}
 
 		handle_path /api/* {
-			header_up Authorization "Bearer {$RECTO_API_KEY}"
-			reverse_proxy api:3000
+			reverse_proxy api:3000 {
+				header_up Authorization "Bearer {$RECTO_API_KEY}"
+			}
 		}
 
 		handle_path /api {
-			header_up Authorization "Bearer {$RECTO_API_KEY}"
-			reverse_proxy api:3000
+			reverse_proxy api:3000 {
+				header_up Authorization "Bearer {$RECTO_API_KEY}"
+			}
 		}
 
 		root * /srv/web
