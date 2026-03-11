@@ -83,6 +83,82 @@ The API (3000), MCP (3001), and database (5432) ports are exposed on the host fo
 
 The web dashboard's API key (`VITE_RECTO_API_KEY`) is baked into the JavaScript bundle at build time. Anyone who passes basic auth can see it in browser dev tools. This is acceptable for single-user self-hosted deployments but keep it in mind.
 
+### Disabling the web dashboard
+
+If you only use Recto through MCP (e.g., Claude Desktop), the web dashboard is unnecessary. Disabling it removes the basic auth attack surface — basic auth is vulnerable to brute force and doesn't support multi-factor authentication.
+
+**1. Replace the Caddyfile catch-all handler**
+
+Change the last `handle` block in your `Caddyfile` from serving static files to returning a 404:
+
+```caddy
+handle {
+    respond 404
+}
+```
+
+The full `Caddyfile` should look like this:
+
+```caddy
+{$CADDY_GLOBAL_OPTIONS}
+
+{$RECTO_DOMAIN:localhost} {
+	handle /mcp {
+		reverse_proxy mcp:3001
+	}
+
+	handle /mcp/* {
+		reverse_proxy mcp:3001
+	}
+
+	handle /.well-known/oauth-authorization-server {
+		reverse_proxy api:3000
+	}
+
+	handle /authorize {
+		reverse_proxy api:3000
+	}
+
+	handle /token {
+		reverse_proxy api:3000
+	}
+
+	handle /register {
+		reverse_proxy api:3000
+	}
+
+	handle /api {
+		uri strip_prefix /api
+		reverse_proxy api:3000
+	}
+
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy api:3000
+	}
+
+	handle {
+		respond 404
+	}
+}
+```
+
+**2. Skip the web container**
+
+Start the stack without building or running the web service:
+
+```bash
+# Pre-built images
+docker compose -f docker-compose.ghcr.yml up -d --scale web=0
+
+# Build from source
+docker compose up -d --scale web=0
+```
+
+You can also remove `VITE_RECTO_API_KEY`, `RECTO_WEB_USER`, and `RECTO_WEB_PASSWORD_HASH` from your `.env` since they are no longer used.
+
+**What you lose:** The web dashboard (timeline, search, tags, and settings pages). All MCP and API functionality continues to work normally.
+
 ### Rebuilding after key changes
 
 Since `VITE_RECTO_API_KEY` is a build-time variable, changing the API key requires rebuilding the web container:
